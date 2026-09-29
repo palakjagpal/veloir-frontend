@@ -1,0 +1,117 @@
+.community-signup {
+  background: #c7e2b2;
+  padding: 75px 30px;
+}
+.community-signup-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr minmax(340px, 0.8fr);
+  gap: 80px;
+  align-items: center;
+}
+.community-copy > p {
+  font-family: Parisienne, cursive;
+  font-size: 34px;
+  margin: 0 0 5px;
+}
+.community-copy h2 {
+  font-size: clamp(30px, 3.8vw, 52px);
+  letter-spacing: -2.5px;
+}
+.community-copy span {
+  display: block;
+  max-width: 500px;
+  line-height: 1.6;
+  font-size: 13px;
+  margin-top: 18px;
+  color: #254a47;
+}
+.community-form {
+  display: flex;
+  border-bottom: 1px solid #092532;
+}
+.community-form input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  outline: 0;
+  padding: 16px 4px;
+  font-size: 14px;
+  font-weight: bold;
+}
+.community-form button {
+  background: #092532;
+  color: #fff;
+  border: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 21px;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.1s ease;
+}
+
+.community-form button:hover:not(:disabled) {
+  background: var(--mint);
+  color: var(--ink);
+}
+
+.community-form button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.community-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 800px) {
+  .community-signup {
+    padding: 55px 22px;
+  }
+  .community-signup-inner {
+    display: block;
+  }
+  .community-copy > p {
+    font-size: 29px;
+  }
+  .community-copy span {
+    margin-bottom: 28px;
+  }
+  .community-form input {
+    font-size: 13px;
+  }
+  .community-form button {
+    padding: 0 14px;
+  }
+}
+
+.community-form-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 4px;
+  border-bottom: 1px solid #092532;
+  font-size: 13px;
+  font-weight: 600;
+  color: #092532;
+}
+
+.community-form-success svg {
+  flex-shrink: 0;
+  font-size: 18px;
+  color: #254a47;
+}
