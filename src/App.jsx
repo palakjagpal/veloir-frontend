@@ -15,12 +15,28 @@ import CreateBikeListingPage from "./pages/CreateBikeListingPage";
 import MyBikesPage from "./pages/MyBikesPage";
 import EditBikeListingPage from "./pages/EditBikeListingPage";
 import AllRegionsPage from "./pages/AllRegionsPage";
+import {
+  DealsPage,
+  InquiriesPage,
+  InquiryDetailPage,
+  OffersPage,
+  OfferDetailPage,
+  PurchasesPage,
+  PurchaseDetailPage,
+  TransferDetailPage,
+} from "./pages/deals";
+
+// Small helper to keep the route table readable.
+const guard = (element, roles) => (
+  <ProtectedRoute roles={roles}>{element}</ProtectedRoute>
+);
 
 export default function App() {
   return (
     <AuthProvider>
       <ScrollToTop />
       <Routes>
+        {/* Public */}
         <Route path="/" element={<HomePage />} />
         <Route path="/bikes" element={<BikesPage />} />
         <Route path="/bikes/:id" element={<BikeDetailsPage />} />
@@ -28,48 +44,26 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<HomePage />} />
-        <Route
-          path="/wishlist"
-          element={
-            <ProtectedRoute>
-              <WishlistPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bikes/create"
-          element={
-            <ProtectedRoute>
-              <CreateBikeListingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/bikes/:id/edit"
-          element={
-            <ProtectedRoute>
-              <EditBikeListingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/my-bikes"
-          element={
-            <ProtectedRoute>
-              <MyBikesPage />
-            </ProtectedRoute>
-          }
-        />
         <Route path="/regions" element={<AllRegionsPage />} />
+
+        {/* Authenticated */}
+        <Route path="/settings" element={guard(<SettingsPage />)} />
+        <Route path="/wishlist" element={guard(<WishlistPage />)} />
+        <Route path="/bikes/create" element={guard(<CreateBikeListingPage />)} />
+        <Route path="/bikes/:id/edit" element={guard(<EditBikeListingPage />)} />
+        <Route path="/my-bikes" element={guard(<MyBikesPage />)} />
+
+        {/* Deals*/}
+        <Route path="/deals" element={guard(<DealsPage />)} />
+        <Route path="/inquiries" element={guard(<InquiriesPage />)} />
+        <Route path="/inquiries/:id" element={guard(<InquiryDetailPage />)} />
+        <Route path="/offers" element={guard(<OffersPage />)} />
+        <Route path="/offers/:id" element={guard(<OfferDetailPage />)} />
+        <Route path="/purchases" element={guard(<PurchasesPage />)} />
+        <Route path="/purchases/:id" element={guard(<PurchaseDetailPage />)} />
+        <Route path="/transfers/:id" element={guard(<TransferDetailPage />)} />
+
+        <Route path="*" element={<HomePage />} />
       </Routes>
     </AuthProvider>
   );

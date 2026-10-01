@@ -1,6 +1,6 @@
 // frontend/src/pages/LoginPage.jsx
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiEye, FiEyeOff } from 'react-icons/fi'
 import { API_BASE_URL, api } from '../lib/api'
@@ -11,6 +11,10 @@ import '../password-field.css'
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // ProtectedRoute passes the originally requested URL (e.g. an emailed /offers/:id link)
+  const from = location.state?.from
+  const redirectTo = from ? `${from.pathname || ''}${from.search || ''}${from.hash || ''}` || '/' : '/'
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
@@ -44,7 +48,7 @@ export default function LoginPage() {
       }
 
       login(response.token, response.user)
-      navigate('/')
+      navigate(redirectTo, { replace: true })
     } catch (err) {
       if (err.requiresPhoneVerification) {
         setError('Please verify your phone number before logging in.')
@@ -62,7 +66,7 @@ export default function LoginPage() {
 
   const handle2FASuccess = (token, user) => {
     login(token, user)
-    navigate('/')
+    navigate(redirectTo, { replace: true })
   }
 
   const handleResendCode = async () => {

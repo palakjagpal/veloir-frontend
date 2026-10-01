@@ -1,7 +1,7 @@
 // frontend/src/components/Layout.jsx
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { FiArrowRight, FiBell, FiMenu, FiSearch, FiUser, FiX, FiLogOut, FiList, FiSettings, FiHeart, FiInstagram, FiFacebook, FiTwitter, FiYoutube, FiMail, FiPhone, FiCheckCircle } from 'react-icons/fi'
+import { FiArrowRight, FiBell, FiMenu, FiSearch, FiUser, FiX, FiLogOut, FiList, FiSettings, FiHeart, FiInstagram, FiFacebook, FiTwitter, FiYoutube, FiMail, FiPhone, FiCheckCircle, FiBriefcase } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { getImageUrl, api } from '../lib/api' 
@@ -94,7 +94,13 @@ function Header() {
         <Link className="icon-button desktop" to="/bikes">
           <FiSearch />
         </Link>
-        <button className="icon-button desktop">
+        <button
+          type="button"
+          className="icon-button desktop"
+          aria-label="Notifications"
+          title="Notifications"
+          onClick={() => navigate(user ? '/deals' : '/login', user ? undefined : { state: { from: { pathname: '/deals' } } })}
+        >
           <FiBell />
         </button>
 
@@ -142,6 +148,13 @@ function Header() {
                   onClick={() => setShowDropdown(false)}
                 >
                   <FiList /> My Listings
+                </Link>
+                <Link 
+                  to="/deals" 
+                  className="dropdown-item" 
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiBriefcase /> Deals
                 </Link>
                 <Link 
                   to="/settings" 
