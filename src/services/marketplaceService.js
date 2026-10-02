@@ -10,8 +10,20 @@ export const createInquiry = (bikeId, payload) =>
         body: JSON.stringify(payload),
     });
 
-export const getMyInquiries = (role = "") =>
-    api(`/api/inquiries${role ? `?role=${role}` : ""}`);
+/**
+ * List inquiries.
+ * Accepts either a role string (legacy: "buyer" | "seller") or a params object:
+ * { role, status, page, limit }. Empty values are omitted from the query string.
+ */
+export const getMyInquiries = (params = {}) => {
+    const p = typeof params === "string" ? { role: params } : params;
+    const qs = new URLSearchParams();
+    Object.entries(p).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") qs.set(key, value);
+    });
+    const query = qs.toString();
+    return api(`/api/inquiries${query ? `?${query}` : ""}`);
+};
 
 export const getInquiry = (id) =>
     api(`/api/inquiries/${id}`);

@@ -2,7 +2,7 @@ import { api, formatPrice, getImageUrl } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../hooks/useWishlist";
 import { useEffect, useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   FiMapPin,
   FiCalendar,
@@ -21,12 +21,16 @@ import {
 } from "react-icons/fi";
 import Layout from "../components/Layout";
 import { BikeCard } from "../components/BikeCard";
+import SendInquiryModal from "../components/deals/SendInquiryModal";
+import { getUserId } from "../lib/inquiryUtils";
 
 
 export default function BikeDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const [showInquiry, setShowInquiry] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
   const handleWishlistToggle = async () => {
@@ -128,6 +132,19 @@ export default function BikeDetailsPage() {
     ...(bike.images || []),
   ].filter(Boolean);
   const uniqueImages = [...new Set(images)];
+
+  const isOwnListing = !!user && getUserId(user) === String(seller._id || "");
+  const bikeAvailable = bike.isAvailable !== false && (!bike.status || bike.status === "available");
+  const canInquire = !isOwnListing && bikeAvailable;
+
+  const handleSendInquiry = () => {
+    if (!user) {
+      // come back to this bike after signing in
+      navigate("/login", { state: { from: location } });
+      return;
+    }
+    if (canInquire) setShowInquiry(true);
+  };
 
   const transactions = [];
   if (bike.isForSale !== false) transactions.push({ key: "buy", label: "For Sale" });
@@ -242,14 +259,26 @@ export default function BikeDetailsPage() {
               >
                 <FiPhone /> Contact Seller
               </a>
-              <a
-                href={`mailto:${seller.email || ""}?subject=Inquiry about ${
-                  bike.title
-                }`}
+              <button
+                type="button"
                 className="btn btn-outline"
+                disabled={!canInquire && !!user}
+                title={
+                  isOwnListing
+                    ? "This is your own listing"
+                    : !bikeAvailable
+                      ? "This bike is no longer available"
+                      : undefined
+                }
+                onClick={handleSendInquiry}
               >
-                <FiMail /> Send Inquiry
-              </a>
+                <FiMail />{" "}
+                {isOwnListing
+                  ? "Your listing"
+                  : !bikeAvailable
+                    ? "Unavailable"
+                    : "Send Inquiry"}
+              </button>
               <button
                 className={`icon-action ${isWishlisted(id) ? "active-wishlist" : ""}`}
                 title={isWishlisted(id) ? "Remove from wishlist" : "Add to wishlist"}
@@ -571,6 +600,18 @@ export default function BikeDetailsPage() {
           </section>
         )}
       </main>
+
+      {showInquiry && (
+        <SendInquiryModal
+          bike={bike}
+          user={user}
+          onClose={() => setShowInquiry(false)}
+          onSuccess={(inquiry) => {
+            setShowInquiry(false);
+            navigate(inquiry?._id ? `/inquiries/${inquiry._id}` : "/inquiries");
+          }}
+        />
+      )}
     </Layout>
   );
 }
