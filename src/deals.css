@@ -290,7 +290,7 @@
   font-weight: 700;
   font-size: 13px;
 }
-.dl-field input,
+.dl-field input:not([type="radio"]):not([type="checkbox"]),
 .dl-field select,
 .dl-field textarea,
 .dl-confirm textarea {
@@ -301,7 +301,7 @@
   color: var(--ink);
   width: 100%;
 }
-.dl-field input:focus,
+.dl-field input:not([type="radio"]):not([type="checkbox"]):focus,
 .dl-field select:focus,
 .dl-field textarea:focus,
 .dl-confirm textarea:focus {
@@ -336,23 +336,69 @@
   flex-wrap: wrap;
 }
 .dl-radio-group label {
+  position: relative;
+  flex: 1 1 auto;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
   border: 1px solid #b9c9be;
   border-radius: 999px;
-  padding: 7px 14px;
-  font-weight: 600;
-  cursor: pointer;
   background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
-.dl-radio-group input {
-  accent-color: var(--ink);
+.dl-radio-group label:hover {
+  border-color: var(--ink);
 }
 .dl-radio-group label.checked {
   background: var(--ink);
-  color: #fff;
   border-color: var(--ink);
+  color: #fff;
+}
+/* native radio stays in the DOM for a11y/keyboard but is visually replaced by the pill */
+.dl-radio-group input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+.dl-radio-group label:has(input:focus-visible) {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+.dl-radio-group .dl-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.dl-radio-group label.checked .dl-dot::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.dl-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ink);
+  flex-shrink: 0;
 }
 .dl-error {
   background: #fadcdc;
@@ -368,13 +414,25 @@
 }
 
 /* Modal */
+.dl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgba(9, 37, 50, 0.7);
+  backdrop-filter: blur(8px);
+  overscroll-behavior: contain;
+}
 .dl-modal {
   background: var(--paper);
   border-radius: 16px;
   width: 100%;
   max-width: 560px;
-  max-height: 92vh;
-  overflow-y: auto;
+  margin: auto;
   padding: 30px 28px 24px;
   position: relative;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
@@ -443,6 +501,9 @@
   }
   .dl-modal {
     padding: 26px 18px 18px;
+  }
+  .dl-overlay {
+    padding: 12px;
   }
 }
 

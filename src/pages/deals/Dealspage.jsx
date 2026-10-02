@@ -7,7 +7,7 @@ const sections = [
   { to: '/purchases', title: 'Purchases', text: 'Payments, status and ownership transfers.' },
 ]
 
-export default function DealsPage() {
+export default function Dealspage() {
   return (
     <Layout>
       <main className="wrap bike-section" style={{ paddingTop: 160 }}>

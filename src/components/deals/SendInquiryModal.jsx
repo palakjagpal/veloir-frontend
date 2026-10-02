@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { FiSend, FiX } from 'react-icons/fi'
 import toast from 'react-hot-toast'
@@ -102,8 +103,9 @@ export default function SendInquiryModal({ bike, user, onClose, onSuccess }) {
 
   const isDuplicate = /already have a pending inquiry/i.test(serverError)
 
-  return (
-    <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
+  // Portal to <body>: escapes any transformed/overflow-hidden ancestor and sits above the fixed header
+  return createPortal(
+    <div className="dl-overlay" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
       <div className="dl-modal" role="dialog" aria-modal="true" aria-labelledby="inq-title">
         <button type="button" className="dl-modal-close" onClick={onClose} aria-label="Close" disabled={busy}>
           <FiX />
@@ -177,7 +179,8 @@ export default function SendInquiryModal({ bike, user, onClose, onSuccess }) {
                     onChange={set('preferredContact')}
                     disabled={busy}
                   />
-                  {label}
+                  <span className="dl-dot" aria-hidden="true" />
+                  <span>{label}</span>
                 </label>
               ))}
             </div>
@@ -223,6 +226,7 @@ export default function SendInquiryModal({ bike, user, onClose, onSuccess }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

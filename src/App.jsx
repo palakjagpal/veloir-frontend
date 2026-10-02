@@ -16,7 +16,7 @@ import MyBikesPage from "./pages/MyBikesPage";
 import EditBikeListingPage from "./pages/EditBikeListingPage";
 import AllRegionsPage from "./pages/AllRegionsPage";
 import {
-  DealsPage,
+  Dealspage,
   InquiriesPage,
   InquiryDetailPage,
   OffersPage,
@@ -54,7 +54,7 @@ export default function App() {
         <Route path="/my-bikes" element={guard(<MyBikesPage />)} />
 
         {/* Deals*/}
-        <Route path="/deals" element={guard(<DealsPage />)} />
+        <Route path="/deals" element={guard(<Dealspage />)} />
         <Route path="/inquiries" element={guard(<InquiriesPage />)} />
         <Route path="/inquiries/:id" element={guard(<InquiryDetailPage />)} />
         <Route path="/offers" element={guard(<OffersPage />)} />
