@@ -21,6 +21,7 @@ import {
   getInquiry,
   rejectInquiry,
 } from '../../services/marketplaceService'
+import { notifyInquiriesChanged } from '../../hooks/usePendingInquiryCount'
 import '../../deals.css'
 
 export default function InquiryDetailPage() {
@@ -63,6 +64,7 @@ export default function InquiryDetailPage() {
     try {
       const res = await fn()
       toast.success(success || res?.message || 'Done')
+      notifyInquiriesChanged()
       await after(res)
     } catch (err) {
       toast.error(err.message || 'Something went wrong')

@@ -445,3 +445,40 @@
     padding: 26px 18px 18px;
   }
 }
+
+/* Header: unread/pending badge + mobile account block */
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  margin-left: auto;
+}
+.icon-button.has-badge {
+  position: relative;
+}
+.icon-button.has-badge .nav-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  transform: translate(25%, -15%);
+}
+.dropdown-item .nav-badge {
+  margin-left: auto;
+}
+.mobile-nav-link .nav-badge {
+  margin-left: auto;
+}
+/* hidden on desktop; the existing mobile media query shows it inside the open menu */
+.header nav .profile-mobile {
+  display: none;
+}

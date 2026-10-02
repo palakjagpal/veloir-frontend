@@ -1,10 +1,13 @@
 // frontend/src/components/Layout.jsx
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { FiArrowRight, FiBell, FiMenu, FiSearch, FiUser, FiX, FiLogOut, FiList, FiSettings, FiHeart, FiInstagram, FiFacebook, FiTwitter, FiYoutube, FiMail, FiPhone, FiCheckCircle, FiBriefcase } from 'react-icons/fi'
+import { FiArrowRight, FiBell, FiMenu, FiSearch, FiUser, FiX, FiLogOut, FiList, FiSettings, FiHeart, FiInstagram, FiFacebook, FiTwitter, FiYoutube, FiMail, FiPhone, FiCheckCircle, FiBriefcase, FiInbox } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { useAuth } from '../context/AuthContext'
 import { getImageUrl, api } from '../lib/api' 
+import usePendingInquiryCount from '../hooks/usePendingInquiryCount'
+import { getUserId } from '../lib/inquiryUtils'
+import '../deals.css'
 import '../community-signup.css'
 import '../newsletter-spacing.css'
 
@@ -24,6 +27,8 @@ function Header() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation() 
+  const pendingInquiries = usePendingInquiryCount(user ? getUserId(user) : null)
+  const badge = pendingInquiries > 0 ? (pendingInquiries > 99 ? '99+' : pendingInquiries) : null
 
   useEffect(() => {
     const listener = () => setScrolled(window.scrollY > 10)
@@ -83,10 +88,36 @@ function Header() {
             {name}
           </NavLink>
         ))}
-        
-        
-        
-        
+
+        <div className="profile-mobile">
+          {user ? (
+            <>
+              <div className="mobile-user">
+                <div className="avatar">
+                  {(user.profileImage || user.avatar) ? (
+                    <img src={getImageUrl(user.profileImage || user.avatar)} alt={user.name} referrerPolicy="no-referrer" />
+                  ) : (
+                    user.name?.[0]?.toUpperCase() || 'U'
+                  )}
+                </div>
+                <div>
+                  <div className="mobile-user-name">{user.name}</div>
+                  <div className="mobile-user-email">{user.email}</div>
+                </div>
+              </div>
+              <Link to="/my-bikes" className="mobile-nav-link" onClick={() => setOpen(false)}><FiList /> My Listings</Link>
+              <Link to="/inquiries" className="mobile-nav-link" onClick={() => setOpen(false)}>
+                <FiInbox /> My Inquiries {badge && <span className="nav-badge">{badge}</span>}
+              </Link>
+              <Link to="/deals" className="mobile-nav-link" onClick={() => setOpen(false)}><FiBriefcase /> Deals</Link>
+              <Link to="/wishlist" className="mobile-nav-link" onClick={() => setOpen(false)}><FiHeart /> Wishlist</Link>
+              <Link to="/settings" className="mobile-nav-link" onClick={() => setOpen(false)}><FiSettings /> Account</Link>
+              <button type="button" className="mobile-nav-link mobile-logout" onClick={handleLogout}><FiLogOut /> Logout</button>
+            </>
+          ) : (
+            <Link to="/login" className="mobile-nav-link" onClick={() => setOpen(false)}><FiUser /> Sign in</Link>
+          )}
+        </div>
       </nav>
 
       {/* Navigation Actions */}
@@ -96,12 +127,16 @@ function Header() {
         </Link>
         <button
           type="button"
-          className="icon-button desktop"
-          aria-label="Notifications"
-          title="Notifications"
-          onClick={() => navigate(user ? '/deals' : '/login', user ? undefined : { state: { from: { pathname: '/deals' } } })}
+          className={`icon-button desktop ${badge ? 'has-badge' : ''}`}
+          aria-label={badge ? `${pendingInquiries} inquiries awaiting your response` : 'Notifications'}
+          title={badge ? `${pendingInquiries} inquiries awaiting your response` : 'Inquiries'}
+          onClick={() => {
+            if (!user) return navigate('/login', { state: { from: { pathname: '/inquiries' } } })
+            navigate(badge ? '/inquiries?role=seller&status=pending' : '/inquiries')
+          }}
         >
           <FiBell />
+          {badge && <span className="nav-badge">{badge}</span>}
         </button>
 
         {user && (
@@ -148,6 +183,13 @@ function Header() {
                   onClick={() => setShowDropdown(false)}
                 >
                   <FiList /> My Listings
+                </Link>
+                <Link 
+                  to="/inquiries" 
+                  className="dropdown-item" 
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiInbox /> My Inquiries {badge && <span className="nav-badge">{badge}</span>}
                 </Link>
                 <Link 
                   to="/deals" 

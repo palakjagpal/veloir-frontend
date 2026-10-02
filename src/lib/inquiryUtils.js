@@ -15,11 +15,11 @@ export const CONTACT_LABELS = { email: "Email", phone: "Phone", both: "Email & p
 // /users/me returns `_id`; login / 2FA responses return `id`
 export const getUserId = (u) => String(u?._id || u?.id || "");
 
-// The API only flips pending -> expired lazily (after list queries / seller views),
+// The API flips pending/accepted -> expired lazily (after list queries / views),
 // so derive the real state on the client too.
 export const getEffectiveStatus = (inquiry) => {
   if (
-    inquiry?.status === "pending" &&
+    ["pending", "accepted"].includes(inquiry?.status) &&
     inquiry?.expiresAt &&
     new Date(inquiry.expiresAt).getTime() < Date.now()
   ) {
