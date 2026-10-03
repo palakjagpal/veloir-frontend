@@ -2,7 +2,7 @@
 import { Link, useParams } from 'react-router-dom'
 import Layout from '../../components/Layout'
 
-export default function Dealstub({ eyebrow, title, description }) {
+export default function DealStub({ eyebrow, title, description }) {
   const { id } = useParams()
   return (
     <Layout>
