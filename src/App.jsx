@@ -15,6 +15,7 @@ import CreateBikeListingPage from "./pages/CreateBikeListingPage";
 import MyBikesPage from "./pages/MyBikesPage";
 import EditBikeListingPage from "./pages/EditBikeListingPage";
 import AllRegionsPage from "./pages/AllRegionsPage";
+
 import {
   Dealspage,
   InquiriesPage,
