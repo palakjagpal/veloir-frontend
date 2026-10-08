@@ -1,89 +1,112 @@
 // frontend/src/components/Layout.jsx
-import { useEffect, useState } from 'react'
-import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
-import { FiArrowRight, FiBell, FiMenu, FiSearch, FiUser, FiX, FiLogOut, FiList, FiSettings, FiHeart, FiInstagram, FiFacebook, FiTwitter, FiYoutube, FiMail, FiPhone, FiCheckCircle, FiBriefcase, FiInbox } from 'react-icons/fi'
-import toast from 'react-hot-toast'
-import { useAuth } from '../context/AuthContext'
-import { getImageUrl, api } from '../lib/api' 
-import usePendingInquiryCount from '../hooks/usePendingInquiryCount'
-import { getUserId } from '../lib/inquiryUtils'
-import '../deals.css'
-import '../community-signup.css'
-import '../newsletter-spacing.css'
+import { useEffect, useState } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import {
+  FiArrowRight,
+  FiBell,
+  FiMenu,
+  FiSearch,
+  FiUser,
+  FiX,
+  FiLogOut,
+  FiList,
+  FiSettings,
+  FiHeart,
+  FiInstagram,
+  FiFacebook,
+  FiTwitter,
+  FiYoutube,
+  FiMail,
+  FiPhone,
+  FiCheckCircle,
+  FiBriefcase,
+  FiInbox, FiPercent, FiShoppingBag
+} from "react-icons/fi";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import { getImageUrl, api } from "../lib/api";
+import usePendingInquiryCount from "../hooks/usePendingInquiryCount";
+import { getUserId } from "../lib/inquiryUtils";
+import "../deals.css";
+import "../community-signup.css";
+import "../newsletter-spacing.css";
 
-export function Logo() { 
+export function Logo() {
   return (
     <Link to="/" className="logo">
       <img src="/veloir-logo.png" alt="Veloir" />
       <span>veloir</span>
     </Link>
-  ) 
+  );
 }
 
 function Header() {
-  const [open, setOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [showDropdown, setShowDropdown] = useState(false)
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation() 
-  const pendingInquiries = usePendingInquiryCount(user ? getUserId(user) : null)
-  const badge = pendingInquiries > 0 ? (pendingInquiries > 99 ? '99+' : pendingInquiries) : null
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pendingInquiries = usePendingInquiryCount(
+    user ? getUserId(user) : null,
+  );
+  const badge =
+    pendingInquiries > 0
+      ? pendingInquiries > 99
+        ? "99+"
+        : pendingInquiries
+      : null;
 
   useEffect(() => {
-    const listener = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', listener)
-    return () => window.removeEventListener('scroll', listener)
-  }, [])
+    const listener = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", listener);
+    return () => window.removeEventListener("scroll", listener);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (showDropdown && !event.target.closest('.profile-dropdown-wrapper')) {
-        setShowDropdown(false)
+      if (showDropdown && !event.target.closest(".profile-dropdown-wrapper")) {
+        setShowDropdown(false);
       }
-    }
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [showDropdown])
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showDropdown]);
 
   // Close mobile menu when route changes
   useEffect(() => {
-    setOpen(false)
-  }, [location.pathname]) 
+    setOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
-      await logout()
-      setShowDropdown(false)
-      setOpen(false)
-      navigate('/')
+      await logout();
+      setShowDropdown(false);
+      setOpen(false);
+      navigate("/");
     } catch (error) {
-      console.error('Logout error:', error)
-      logout()
-      navigate('/')
+      console.error("Logout error:", error);
+      logout();
+      navigate("/");
     }
-  }
+  };
 
   const navLinks = [
-    { name: 'Discover', path: '/bikes' },
-    { name: 'Buy', path: '/bikes?type=sale' },
-    { name: 'Rent', path: '/bikes?type=rent' },
-    { name: 'Trade', path: '/bikes?type=trade' }
-  ]
+    { name: "Discover", path: "/bikes" },
+    { name: "Buy", path: "/bikes?type=sale" },
+    { name: "Rent", path: "/bikes?type=rent" },
+    { name: "Trade", path: "/bikes?type=trade" },
+  ];
 
   return (
-    <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
+    <header className={`header ${scrolled ? "header-scrolled" : ""}`}>
       <Logo />
-      
+
       {/* Navigation */}
-      <nav className={open ? 'mobile-open' : ''}>
+      <nav className={open ? "mobile-open" : ""}>
         {navLinks.map(({ name, path }) => (
-          <NavLink 
-            onClick={() => setOpen(false)} 
-            key={name} 
-            to={path}
-          >
+          <NavLink onClick={() => setOpen(false)} key={name} to={path}>
             {name}
           </NavLink>
         ))}
@@ -93,10 +116,14 @@ function Header() {
             <>
               <div className="mobile-user">
                 <div className="avatar">
-                  {(user.profileImage || user.avatar) ? (
-                    <img src={getImageUrl(user.profileImage || user.avatar)} alt={user.name} referrerPolicy="no-referrer" />
+                  {user.profileImage || user.avatar ? (
+                    <img
+                      src={getImageUrl(user.profileImage || user.avatar)}
+                      alt={user.name}
+                      referrerPolicy="no-referrer"
+                    />
                   ) : (
-                    user.name?.[0]?.toUpperCase() || 'U'
+                    user.name?.[0]?.toUpperCase() || "U"
                   )}
                 </div>
                 <div>
@@ -104,17 +131,58 @@ function Header() {
                   <div className="mobile-user-email">{user.email}</div>
                 </div>
               </div>
-              <Link to="/my-bikes" className="mobile-nav-link" onClick={() => setOpen(false)}><FiList /> My Listings</Link>
-              <Link to="/inquiries" className="mobile-nav-link" onClick={() => setOpen(false)}>
-                <FiInbox /> My Inquiries {badge && <span className="nav-badge">{badge}</span>}
+              <Link
+                to="/my-bikes"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiList /> My Listings
               </Link>
-              <Link to="/deals" className="mobile-nav-link" onClick={() => setOpen(false)}><FiBriefcase /> Deals</Link>
-              <Link to="/wishlist" className="mobile-nav-link" onClick={() => setOpen(false)}><FiHeart /> Wishlist</Link>
-              <Link to="/settings" className="mobile-nav-link" onClick={() => setOpen(false)}><FiSettings /> Account</Link>
-              <button type="button" className="mobile-nav-link mobile-logout" onClick={handleLogout}><FiLogOut /> Logout</button>
+              <Link
+                to="/inquiries"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiInbox /> My Inquiries{" "}
+                {badge && <span className="nav-badge">{badge}</span>}
+              </Link>
+              <Link
+                to="/deals"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiBriefcase /> Deals
+              </Link>
+              <Link
+                to="/wishlist"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiHeart /> Wishlist
+              </Link>
+              <Link
+                to="/settings"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiSettings /> Account
+              </Link>
+              <button
+                type="button"
+                className="mobile-nav-link mobile-logout"
+                onClick={handleLogout}
+              >
+                <FiLogOut /> Logout
+              </button>
             </>
           ) : (
-            <Link to="/login" className="mobile-nav-link" onClick={() => setOpen(false)}><FiUser /> Sign in</Link>
+            <Link
+              to="/login"
+              className="mobile-nav-link"
+              onClick={() => setOpen(false)}
+            >
+              <FiUser /> Sign in
+            </Link>
           )}
         </div>
       </nav>
@@ -126,12 +194,25 @@ function Header() {
         </Link>
         <button
           type="button"
-          className={`icon-button desktop ${badge ? 'has-badge' : ''}`}
-          aria-label={badge ? `${pendingInquiries} inquiries awaiting your response` : 'Notifications'}
-          title={badge ? `${pendingInquiries} inquiries awaiting your response` : 'Inquiries'}
+          className={`icon-button desktop ${badge ? "has-badge" : ""}`}
+          aria-label={
+            badge
+              ? `${pendingInquiries} inquiries awaiting your response`
+              : "Notifications"
+          }
+          title={
+            badge
+              ? `${pendingInquiries} inquiries awaiting your response`
+              : "Inquiries"
+          }
           onClick={() => {
-            if (!user) return navigate('/login', { state: { from: { pathname: '/inquiries' } } })
-            navigate(badge ? '/inquiries?role=seller&status=pending' : '/inquiries')
+            if (!user)
+              return navigate("/login", {
+                state: { from: { pathname: "/inquiries" } },
+              });
+            navigate(
+              badge ? "/inquiries?role=seller&status=pending" : "/inquiries",
+            );
           }}
         >
           <FiBell />
@@ -147,27 +228,31 @@ function Header() {
         {/* Profile Dropdown - Desktop */}
         {user ? (
           <div className="profile-dropdown-wrapper">
-            <button 
+            <button
               className="profile-link"
               onClick={(e) => {
-                e.stopPropagation()
-                setShowDropdown(!showDropdown)
+                e.stopPropagation();
+                setShowDropdown(!showDropdown);
               }}
               aria-expanded={showDropdown}
               aria-haspopup="true"
             >
               <FiUser />
-              <span>{user.name?.split(' ')[0] || 'User'}</span>
+              <span>{user.name?.split(" ")[0] || "User"}</span>
             </button>
 
             {showDropdown && (
               <div className="profile-dropdown">
                 <div className="dropdown-header">
                   <div className="dropdown-avatar">
-                    {(user.profileImage || user.avatar)? (
-                      <img src={getImageUrl(user.profileImage || user.avatar)} alt={user.name} referrerPolicy="no-referrer" />
+                    {user.profileImage || user.avatar ? (
+                      <img
+                        src={getImageUrl(user.profileImage || user.avatar)}
+                        alt={user.name}
+                        referrerPolicy="no-referrer"
+                      />
                     ) : (
-                      user.name?.[0]?.toUpperCase() || 'U'
+                      user.name?.[0]?.toUpperCase() || "U"
                     )}
                   </div>
                   <div className="dropdown-user-info">
@@ -176,38 +261,50 @@ function Header() {
                   </div>
                 </div>
                 <div className="dropdown-divider" />
-                <Link 
-                  to="/my-bikes" 
-                  className="dropdown-item" 
+                <Link
+                  to="/my-bikes"
+                  className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
                 >
                   <FiList /> My Listings
                 </Link>
-                <Link 
-                  to="/inquiries" 
-                  className="dropdown-item" 
+                <Link
+                  to="/inquiries"
+                  className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
                 >
-                  <FiInbox /> My Inquiries {badge && <span className="nav-badge">{badge}</span>}
+                  <FiInbox /> My Inquiries{" "}
+                  {badge && <span className="nav-badge">{badge}</span>}
                 </Link>
-                <Link 
-                  to="/deals" 
-                  className="dropdown-item" 
+                <Link
+                  to="/deals"
+                  className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
                 >
                   <FiBriefcase /> Deals
                 </Link>
-                <Link 
-                  to="/settings" 
-                  className="dropdown-item" 
+                <Link
+                  to="/offers"
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiPercent /> Offers
+                </Link>
+                <Link
+                  to="/purchases"
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiShoppingBag /> Purchases
+                </Link>
+                <Link
+                  to="/settings"
+                  className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
                 >
                   <FiSettings /> Account
                 </Link>
-                <button 
-                  className="dropdown-item logout" 
-                  onClick={handleLogout}
-                >
+                <button className="dropdown-item logout" onClick={handleLogout}>
                   <FiLogOut /> Logout
                 </button>
               </div>
@@ -223,43 +320,43 @@ function Header() {
         <Link className="btn btn-mint desktop" to="/bikes/create">
           List your bike <FiArrowRight />
         </Link>
-        
+
         <button className="menu" onClick={() => setOpen(!open)}>
           {open ? <FiX /> : <FiMenu />}
         </button>
       </div>
     </header>
-  )
+  );
 }
 
 function CommunitySignup() {
-  const [email, setEmail] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [status, setStatus] = useState(null) 
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState(null);
 
   const handleSubmit = async (event) => {
-    event.preventDefault()
+    event.preventDefault();
 
-    if (submitting) return
+    if (submitting) return;
 
-    setSubmitting(true)
-    setStatus(null)
+    setSubmitting(true);
+    setStatus(null);
 
     try {
-      const response = await api('/api/newsletter/subscribe', {
-        method: 'POST',
+      const response = await api("/api/newsletter/subscribe", {
+        method: "POST",
         body: JSON.stringify({ email }),
-      })
+      });
 
-      setStatus(response.alreadySubscribed ? 'already' : 'success')
-      toast.success(response.message)
-      setEmail('')
+      setStatus(response.alreadySubscribed ? "already" : "success");
+      toast.success(response.message);
+      setEmail("");
     } catch (err) {
-      toast.error(err.message || 'Unable to subscribe right now.')
+      toast.error(err.message || "Unable to subscribe right now.");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <section className="community-signup">
@@ -268,7 +365,8 @@ function CommunitySignup() {
           <p>Notes from the road.</p>
           <h2>Join the Veloir community</h2>
           <span>
-            Receive curated riding routes, maintenance tips, and exclusive marketplace deals once a month.
+            Receive curated riding routes, maintenance tips, and exclusive
+            marketplace deals once a month.
           </span>
         </div>
 
@@ -276,14 +374,16 @@ function CommunitySignup() {
           <div className="community-form-success">
             <FiCheckCircle />
             <span>
-              {status === 'already'
+              {status === "already"
                 ? "You're already part of the Veloir community!"
                 : "You're subscribed! Check your inbox to say hi."}
             </span>
           </div>
         ) : (
           <form className="community-form" onSubmit={handleSubmit}>
-            <label className="sr-only" htmlFor="community-email">Your email address</label>
+            <label className="sr-only" htmlFor="community-email">
+              Your email address
+            </label>
             <input
               id="community-email"
               type="email"
@@ -294,15 +394,14 @@ function CommunitySignup() {
               disabled={submitting}
             />
             <button type="submit" disabled={submitting}>
-              {submitting ? 'Subscribing...' : 'Subscribe'}
+              {submitting ? "Subscribing..." : "Subscribe"}
             </button>
           </form>
         )}
       </div>
     </section>
-  )
+  );
 }
-
 
 function Footer() {
   return (
@@ -312,24 +411,45 @@ function Footer() {
           <Logo />
           <p>Ride further. Live the journey.</p>
           <p className="footer-tagline">
-            India's marketplace for buying, selling, renting and trading motorcycles.
+            India's marketplace for buying, selling, renting and trading
+            motorcycles.
           </p>
           <div className="footer-social">
-            <a href="https://www.instagram.com" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://www.instagram.com"
+              aria-label="Instagram"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <FiInstagram />
             </a>
-            <a href="https://www.facebook.com" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://www.facebook.com"
+              aria-label="Facebook"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <FiFacebook />
             </a>
-            <a href="https://x.com" aria-label="X" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://x.com"
+              aria-label="X"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <FiX />
             </a>
-            <a href="https://www.youtube.com" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://www.youtube.com"
+              aria-label="YouTube"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <FiYoutube />
             </a>
           </div>
         </div>
- 
+
         <div className="footer-col">
           <h4>Explore</h4>
           <Link to="/bikes">Buy bikes</Link>
@@ -337,9 +457,7 @@ function Footer() {
           <Link to="/bikes?type=trade">Trade-in</Link>
           <Link to="/wishlist">Wishlist</Link>
         </div>
- 
-        
- 
+
         <div className="footer-col">
           <h4>Company</h4>
           {/* TODO: build these pages/routes, then swap href="#" for real <Link to="..."> */}
@@ -348,7 +466,7 @@ function Footer() {
           <a href="/notes-from-the-road">Notes from the road</a>
           <a href="/contact">Contact</a>
         </div>
- 
+
         <div className="footer-col">
           <h4>Legal</h4>
           {/* TODO: build these pages/routes, then swap href="#" for real <Link to="..."> */}
@@ -357,9 +475,11 @@ function Footer() {
           <a href="/refund-policy">Refund policy</a>
         </div>
       </div>
- 
+
       <div className="footer-bottom wrap">
-        <span>© {new Date().getFullYear()} Veloir India. All rights reserved.</span>
+        <span>
+          © {new Date().getFullYear()} Veloir India. All rights reserved.
+        </span>
         <div className="footer-contact">
           <a href="mailto:">
             <FiMail /> support@veloir.in
@@ -370,9 +490,9 @@ function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }
- 
+
 export default function Layout({ children }) {
   return (
     <>
@@ -381,5 +501,5 @@ export default function Layout({ children }) {
       <CommunitySignup />
       <Footer />
     </>
-  )
+  );
 }
