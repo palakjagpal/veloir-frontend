@@ -25,7 +25,7 @@ import {
   PurchasesPage,
   PurchaseDetailPage,
   TransferDetailPage
-} from "./pages/deals/index";
+} from "./pages/deals";
 
 // Small helper to keep the route table readable.
 const guard = (element, roles) => (
