@@ -67,9 +67,8 @@ function Header() {
 
   const navLinks = [
     { name: 'Discover', path: '/bikes' },
-    { name: 'Buy', path: '/bikes' },
-    { name: 'Sell', path: '/bikes?type=sale' },
-    { name: 'Ride', path: '/bikes?type=rent' },
+    { name: 'Buy', path: '/bikes?type=sale' },
+    { name: 'Rent', path: '/bikes?type=rent' },
     { name: 'Trade', path: '/bikes?type=trade' }
   ]
 
