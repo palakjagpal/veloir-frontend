@@ -20,7 +20,6 @@ import {
   DealsPage,
   InquiriesPage,
   InquiryDetailPage,
-  OffersPage,
 } from "./pages/deals";
 
 // Small helper to keep the route table readable.
@@ -54,7 +53,6 @@ export default function App() {
         <Route path="/deals" element={guard(<DealsPage />)} />
         <Route path="/inquiries" element={guard(<InquiriesPage />)} />
         <Route path="/inquiries/:id" element={guard(<InquiryDetailPage />)} />
-        <Route path="/offers" element={guard(<OffersPage />)} />
 
         <Route path="*" element={<HomePage />} />
       </Routes>
