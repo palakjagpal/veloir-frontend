@@ -15,6 +15,8 @@ import CreateBikeListingPage from "./pages/CreateBikeListingPage";
 import MyBikesPage from "./pages/MyBikesPage";
 import EditBikeListingPage from "./pages/EditBikeListingPage";
 import AllRegionsPage from "./pages/AllRegionsPage";
+import KycVerificationPage from "./pages/KycVerificationPage";
+import KycVerificationSuccessPage from "./pages/KycVerificationSuccessPage";
 
 import {
   DealsPage,
@@ -49,6 +51,8 @@ export default function App() {
 
         {/* Authenticated */}
         <Route path="/settings" element={guard(<SettingsPage />)} />
+        <Route path="/kyc" element={guard(<KycVerificationPage />)} />
+        <Route path="/kyc/verification-success" element={guard(<KycVerificationSuccessPage />)} />
         <Route path="/wishlist" element={guard(<WishlistPage />)} />
         <Route path="/bikes/create" element={guard(<CreateBikeListingPage />)} />
         <Route path="/bikes/:id/edit" element={guard(<EditBikeListingPage />)} />
