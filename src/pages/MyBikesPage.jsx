@@ -1,9 +1,16 @@
+import BikeGalleryManager from "../components/BikeGalleryManager";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   FiEdit2,
   FiPlus,
   FiTrash2,
+  FiEye,
+  FiEyeOff,
+  FiPackage,
+  FiCheckCircle,
+  FiClock,
+  FiBarChart2,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -11,6 +18,10 @@ import Layout from "../components/Layout";
 import { Skeletons } from "../components/BikeCard";
 import BikeActionOtpModal from "../components/BikeActionOtpModal";
 import { api, getImageUrl, formatPrice } from "../lib/api";
+import {
+  getBikeStats,
+  toggleBikeAvailability,
+} from "../services/sellerService";
 
 function statusBadgeClasses(bike) {
   if (!bike.isApproved) {
@@ -21,6 +32,10 @@ function statusBadgeClasses(bike) {
     bike.status === "sold" ||
     bike.status === "rented"
   ) {
+    return "bg-gray-200 text-gray-600";
+  }
+
+  if (bike.isAvailable === false) {
     return "bg-gray-200 text-gray-600";
   }
 
@@ -40,6 +55,10 @@ function statusLabel(bike) {
     return "Rented";
   }
 
+  if (bike.isAvailable === false) {
+    return "Unavailable";
+  }
+
   if (bike.status === "pending") {
     return "Pending";
   }
@@ -53,6 +72,11 @@ export default function MyBikesPage() {
   const [bikes, setBikes] = useState(null);
   const [error, setError] = useState("");
 
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const [availabilityBusy, setAvailabilityBusy] = useState("");
+
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(false);
 
@@ -63,6 +87,7 @@ export default function MyBikesPage() {
 
   useEffect(() => {
     loadMyBikes();
+    loadStats();
   }, []);
 
   const loadMyBikes = async () => {
@@ -84,7 +109,73 @@ export default function MyBikesPage() {
     }
   };
 
-  const startDeleteFlow = (event, bike) => {
+  const loadStats = async () => {
+    setStatsLoading(true);
+
+    try {
+      const response = await getBikeStats();
+      setStats(response.data || null);
+    } catch (err) {
+      console.error("Failed to load bike stats:", err);
+      setStats(null);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  const handleToggleAvailability = async (
+    event,
+    bike
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (availabilityBusy === bike._id) {
+      return;
+    }
+
+    setAvailabilityBusy(bike._id);
+
+    try {
+      const response =
+        await toggleBikeAvailability(
+          bike._id
+        );
+
+      toast.success(
+        response.message ||
+          "Availability updated successfully."
+      );
+
+      const updatedBike =
+        response.data;
+
+      setBikes((current) =>
+        current?.map((item) =>
+          item._id === bike._id
+            ? {
+                ...item,
+                ...updatedBike,
+              }
+            : item
+        )
+      );
+
+      await loadStats();
+    } catch (err) {
+      toast.error(
+        err.message ||
+          "Unable to update bike availability."
+      );
+    } finally {
+      setAvailabilityBusy("");
+    }
+  };
+
+  const startDeleteFlow = (
+    event,
+    bike
+  ) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -92,7 +183,9 @@ export default function MyBikesPage() {
   };
 
   const cancelDelete = () => {
-    if (deleteBusy) return;
+    if (deleteBusy) {
+      return;
+    }
 
     setDeleteTarget(null);
   };
@@ -115,10 +208,14 @@ export default function MyBikesPage() {
         }
       );
 
-      setOtpBikeId(deleteTarget._id);
+      setOtpBikeId(
+        deleteTarget._id
+      );
+
       setOtpOperationId(
         response.operationId
       );
+
       setOtpMaskedEmail(
         response.maskedEmail
       );
@@ -135,21 +232,21 @@ export default function MyBikesPage() {
     }
   };
 
-  const handleDeleteOtpSuccess = async (
-    response
-  ) => {
-    toast.success(
-      response.message ||
-        "Bike listing deleted successfully."
-    );
+  const handleDeleteOtpSuccess =
+    async (response) => {
+      toast.success(
+        response.message ||
+          "Bike listing deleted successfully."
+      );
 
-    setOtpOpen(false);
-    setOtpBikeId("");
-    setOtpOperationId("");
-    setOtpMaskedEmail("");
+      setOtpOpen(false);
+      setOtpBikeId("");
+      setOtpOperationId("");
+      setOtpMaskedEmail("");
 
-    await loadMyBikes();
-  };
+      await loadMyBikes();
+      await loadStats();
+    };
 
   return (
     <Layout>
@@ -177,8 +274,101 @@ export default function MyBikesPage() {
           </Link>
         </div>
 
+        {/* Seller statistics */}
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
+                <FiPackage />
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Total Listings
+            </p>
+
+            <h3 className="mt-1 text-2xl font-bold text-[#092532]">
+              {statsLoading
+                ? "..."
+                : stats?.totalBikes ?? 0}
+            </h3>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <FiCheckCircle />
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Available
+            </p>
+
+            <h3 className="mt-1 text-2xl font-bold text-[#092532]">
+              {statsLoading
+                ? "..."
+                : stats?.availableBikes ?? 0}
+            </h3>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700">
+                <FiPackage />
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Sold
+            </p>
+
+            <h3 className="mt-1 text-2xl font-bold text-[#092532]">
+              {statsLoading
+                ? "..."
+                : stats?.soldBikes ?? 0}
+            </h3>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                <FiClock />
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Pending Approval
+            </p>
+
+            <h3 className="mt-1 text-2xl font-bold text-[#092532]">
+              {statsLoading
+                ? "..."
+                : stats?.pendingApproval ?? 0}
+            </h3>
+          </div>
+
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                <FiBarChart2 />
+              </div>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Total Views
+            </p>
+
+            <h3 className="mt-1 text-2xl font-bold text-[#092532]">
+              {statsLoading
+                ? "..."
+                : stats?.totalViews ?? 0}
+            </h3>
+          </div>
+        </section>
+
         {error && (
-          <div className="empty">
+          <div className="mb-6 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -226,10 +416,83 @@ export default function MyBikesPage() {
                     </h3>
 
                     <div className="bike-price">
-                      {formatPrice(bike.price)}
+                      {formatPrice(
+                        bike.price
+                      )}
+                    </div>
+
+                    <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                      <FiEye />
+                      {bike.views || 0} views
                     </div>
                   </div>
                 </Link>
+
+                {/* Availability */}
+                {bike.isApproved &&
+                  bike.status !==
+                    "sold" &&
+                  bike.status !==
+                    "rented" && (
+                    <div className="px-4 pb-3">
+                      <button
+                        type="button"
+                        onClick={(event) =>
+                          handleToggleAvailability(
+                            event,
+                            bike
+                          )
+                        }
+                        disabled={
+                          availabilityBusy ===
+                          bike._id
+                        }
+                        className={`flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                          bike.isAvailable ===
+                          false
+                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {availabilityBusy ===
+                        bike._id ? (
+                          "Updating..."
+                        ) : bike.isAvailable ===
+                          false ? (
+                          <>
+                            <FiEye />
+                            Make Available
+                          </>
+                        ) : (
+                          <>
+                            <FiEyeOff />
+                            Mark Unavailable
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                <div className="px-4">
+                  <BikeGalleryManager
+                    bikeId={bike._id}
+                    onChanged={(gallery) => {
+                      setBikes((current) =>
+                        current?.map((item) =>
+                          item._id === bike._id
+                            ? {
+                                ...item,
+                                images: gallery.images,
+                                featuredImage: gallery.featuredImage,
+                              }
+                            : item
+                        )
+                      );
+                    }}
+                  />
+                </div>
+
+                <br></br>
 
                 <div className="flex gap-2 px-4 pb-4">
                   <button
@@ -332,7 +595,9 @@ export default function MyBikesPage() {
         operationId={otpOperationId}
         action="delete"
         maskedEmail={otpMaskedEmail}
-        onSuccess={handleDeleteOtpSuccess}
+        onSuccess={
+          handleDeleteOtpSuccess
+        }
       />
     </Layout>
   );
