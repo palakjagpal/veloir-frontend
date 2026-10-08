@@ -1,41 +1,20 @@
-import DealStub from "./DealStub";
+import DealsPage from "./DealsPage";
+import InquiriesPage from "./InquiriesPage";
+import InquiryDetailPage from "./InquiryDetailPage";
+import OffersPage from "./OffersPage";
+import OfferDetailPage from "./OfferDetailPage";
+import PurchasesPage from "./PurchasesPage";
+import PurchaseDetailPage from "./PurchaseDetailPage";
+import TransferDetailPage from "./TransferDetailPage";
+import "./deals.css";
 
-export { default as DealsPage } from "./DealsPage";
-
-export { default as InquiriesPage } from "./InquiriesPage";
-export { default as InquiryDetailPage } from "./InquiryDetailPage";
-export const OffersPage = () => (
-  <DealStub
-    eyebrow="Deals"
-    title="Offers"
-    description="Your offers will appear here."
-  />
-);
-export const OfferDetailPage = () => (
-  <DealStub
-    eyebrow="Offer"
-    title="Offer details"
-    description="Offer details are coming soon."
-  />
-);
-export const PurchasesPage = () => (
-  <DealStub
-    eyebrow="Deals"
-    title="Purchases"
-    description="Your purchases will appear here."
-  />
-);
-export const PurchaseDetailPage = () => (
-  <DealStub
-    eyebrow="Purchase"
-    title="Purchase details"
-    description="Purchase details and payment are coming soon."
-  />
-);
-export const TransferDetailPage = () => (
-  <DealStub
-    eyebrow="Ownership"
-    title="Ownership transfer"
-    description="Transfer details are coming soon."
-  />
-);
+export {
+  DealsPage,
+  InquiriesPage,
+  InquiryDetailPage,
+  OffersPage,
+  OfferDetailPage,
+  PurchasesPage,
+  PurchaseDetailPage,
+  TransferDetailPage,
+};

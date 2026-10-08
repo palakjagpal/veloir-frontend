@@ -16,6 +16,16 @@ import MyBikesPage from "./pages/MyBikesPage";
 import EditBikeListingPage from "./pages/EditBikeListingPage";
 import AllRegionsPage from "./pages/AllRegionsPage";
 
+import {
+  DealsPage,
+  InquiriesPage,
+  InquiryDetailPage,
+  OffersPage,
+  OfferDetailPage,
+  PurchasesPage,
+  PurchaseDetailPage,
+  TransferDetailPage
+} from "./pages/deals";
 
 // Small helper to keep the route table readable.
 const guard = (element, roles) => (
@@ -45,6 +55,14 @@ export default function App() {
         <Route path="/my-bikes" element={guard(<MyBikesPage />)} />
 
         {/* Deals*/}
+        <Route path="/deals" element={guard(<DealsPage />)} />
+        <Route path="/inquiries" element={guard(<InquiriesPage />)} />
+        <Route path="/inquiries/:id" element={guard(<InquiryDetailPage />)} />
+        <Route path="/offers" element={guard(<OffersPage />)} />
+        <Route path="/offers/:id" element={guard(<OfferDetailPage />)} />
+        <Route path="/purchases" element={guard(<PurchasesPage />)} />
+        <Route path="/purchases/:id" element={guard(<PurchaseDetailPage />)} />
+        <Route path="/transfers/:id" element={guard(<TransferDetailPage />)} />
 
         <Route path="*" element={<HomePage />} />
       </Routes>
