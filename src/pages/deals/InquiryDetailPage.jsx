@@ -1,335 +1,105 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { FiArrowLeft, FiCheck, FiShoppingCart, FiTrash2, FiX } from 'react-icons/fi'
-import toast from 'react-hot-toast'
-import Layout from '../../components/Layout'
-import InquiryStatusBadge from '../../components/deals/InquiryStatusBadge'
-import { useAuth } from '../../context/AuthContext'
-import { formatPrice, getImageUrl } from '../../lib/api'
-import {
-  CONTACT_LABELS,
-  daysLeft,
-  formatDate,
-  formatDateTime,
-  getEffectiveStatus,
-  getUserId,
-} from '../../lib/inquiryUtils'
-import {
-  acceptInquiry,
-  convertInquiryToPurchase,
-  deleteInquiry,
-  getInquiry,
-  rejectInquiry,
-} from '../../services/marketplaceService'
-import { notifyInquiriesChanged } from '../../hooks/usePendingInquiryCount'
-import '../../deals.css'
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { FiArrowLeft, FiCheck, FiChevronRight, FiMail, FiPhone, FiShoppingBag, FiX } from "react-icons/fi";
+import toast from "react-hot-toast";
+import Layout from "../../components/Layout";
+import { acceptInquiry, convertInquiryToPurchase, getInquiry, rejectInquiry } from "../../services/dealsService";
+import { BikeMini, Deadline, ErrorState, LoadingState, PageHeader, PersonRow, StatusBadge } from "./DealUI";
+import { effectiveExpiryStatus, money, dateTime, userId } from "./dealHelpers";
+import { useAuth } from "../../context/AuthContext";
 
 export default function InquiryDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const userId = getUserId(user)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [inquiry, setInquiry] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState("");
 
-  const [inquiry, setInquiry] = useState(null)
-  const [error, setError] = useState('')
-  const [panel, setPanel] = useState(null) // 'accept' | 'reject' | 'convert' | 'delete'
-  const [note, setNote] = useState('')
-  const [busy, setBusy] = useState(false)
+  const load = async () => {
+    setLoading(true); setError("");
+    try { const res = await getInquiry(id); setInquiry(res.data); }
+    catch (err) { setError(err.message || "Unable to load inquiry."); }
+    finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, [id]);
 
-  const load = useCallback(async () => {
-    setError('')
+  const sellerView = inquiry && userId(inquiry.seller) === userId(user);
+  const buyerView = inquiry && userId(inquiry.buyer) === userId(user);
+  const status = inquiry && effectiveExpiryStatus(inquiry.status, inquiry.expiresAt);
+
+  const action = async (type) => {
+    setBusy(type);
     try {
-      const res = await getInquiry(id)
-      setInquiry(res.data)
-    } catch (err) {
-      setError(err.message || 'Failed to load inquiry')
-    }
-  }, [id])
-
-  useEffect(() => {
-    setInquiry(null)
-    setPanel(null)
-    load()
-  }, [load])
-
-  const openPanel = (name) => {
-    setPanel((p) => (p === name ? null : name))
-    setNote('')
-  }
-
-  // Runs an action, toasts the result, and handles failures uniformly
-  const run = async (fn, { success, after }) => {
-    if (busy) return
-    setBusy(true)
-    try {
-      const res = await fn()
-      toast.success(success || res?.message || 'Done')
-      notifyInquiriesChanged()
-      await after(res)
-    } catch (err) {
-      toast.error(err.message || 'Something went wrong')
-      // state may have changed server-side (e.g. bike sold) - resync
-      load()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleAccept = () =>
-    run(() => acceptInquiry(id, note.trim()), {
-      success: 'Inquiry accepted',
-      after: async () => { setPanel(null); await load() },
-    })
-
-  const handleReject = () =>
-    run(() => rejectInquiry(id, note.trim()), {
-      success: 'Inquiry rejected',
-      after: async () => { setPanel(null); await load() },
-    })
-
-  const handleConvert = () =>
-    run(() => convertInquiryToPurchase(id), {
-      success: 'Purchase created',
-      after: async (res) => {
-        const purchaseId = res?.data?.purchase?._id
-        if (purchaseId) navigate(`/purchases/${purchaseId}`)
-        else { setPanel(null); await load() }
-      },
-    })
-
-  const handleDelete = () =>
-    run(() => deleteInquiry(id), {
-      success: 'Inquiry deleted',
-      after: async () => navigate('/inquiries', { replace: true }),
-    })
-
-  const back = (
-    <Link to="/inquiries" className="dl-back"><FiArrowLeft /> All inquiries</Link>
-  )
-
-  if (error) {
-    return (
-      <Layout>
-        <main className="wrap dl-page">
-          {back}
-          <div className="empty">
-            {error}
-            <button onClick={load}>Try again</button>
-          </div>
-        </main>
-      </Layout>
-    )
-  }
-
-  if (!inquiry) {
-    return (
-      <Layout>
-        <main className="wrap dl-page">
-          {back}
-          <div className="dl-skeleton" style={{ height: 260 }} />
-        </main>
-      </Layout>
-    )
-  }
-
-  const bike = inquiry.bike || {}
-  const status = getEffectiveStatus(inquiry)
-  const isBuyer = String(inquiry.buyer?._id) === userId
-  const isSeller = String(inquiry.seller?._id) === userId
-  const other = isBuyer ? inquiry.seller : inquiry.buyer
-  const remaining = ['pending', 'accepted'].includes(status) ? daysLeft(inquiry.expiresAt) : null
-
-  const canRespond = isSeller && status === 'pending'
-  const canConvert = isBuyer && status === 'accepted'
-  const canDelete = (isBuyer || isSeller) && ['pending', 'expired'].includes(status)
-  const showOtherContact = isSeller || ['accepted', 'converted'].includes(status)
+      if (type === "accept") {
+        const message = window.prompt("Optional response to the buyer:", "Your inquiry has been accepted. Please proceed with the next step.");
+        if (message === null) return;
+        await acceptInquiry(id, message);
+        toast.success("Inquiry accepted.");
+      } else if (type === "reject") {
+        const reason = window.prompt("Optional rejection reason:", "");
+        if (reason === null) return;
+        await rejectInquiry(id, reason);
+        toast.success("Inquiry rejected.");
+      } else {
+        const res = await convertInquiryToPurchase(id);
+        toast.success("Inquiry converted to purchase.");
+        const purchaseId = res.data?.purchase?._id;
+        if (purchaseId) { navigate(`/purchases/${purchaseId}`); return; }
+      }
+      await load();
+    } catch (err) { toast.error(err.message || "Action failed."); }
+    finally { setBusy(""); }
+  };
 
   return (
     <Layout>
-      <main className="wrap dl-page">
-        {back}
+      <main className="deal-page wrap">
+        <div className="deal-page-topspace" />
+        {loading && <LoadingState />}
+        {!loading && error && <ErrorState message={error} retry={load} />}
+        {!loading && !error && inquiry && (
+          <>
+            <Link to="/inquiries" className="deal-back"><FiArrowLeft /> Back to inquiries</Link>
+            <PageHeader eyebrow="Inquiry details" title={inquiry.bike?.title || "Inquiry"} description={`Created ${dateTime(inquiry.createdAt)}`} action={<StatusBadge status={status} />} />
 
-        <div className="dl-head">
-          <div>
-            <p className="eyebrow">{isSeller ? 'Inquiry received' : 'Inquiry sent'}</p>
-            <h2>{bike.title || `${bike.brand || ''} ${bike.model || ''}`.trim() || 'Inquiry'}</h2>
-          </div>
-          <InquiryStatusBadge status={status} />
-        </div>
-
-        <div className="dl-detail">
-          <div>
-            <section className="dl-panel">
-              <h3>Bike</h3>
-              <Link to={`/bikes/${bike._id}`} className="dl-bike">
-                <img src={getImageUrl(bike.featuredImage || bike.images?.[0])} alt={bike.title || 'Bike'} />
-                <div>
-                  <strong>{bike.title || `${bike.brand} ${bike.model}`}</strong>
-                  <div className="dl-meta" style={{ marginTop: 6 }}>
-                    {bike.year && <span>{bike.year}</span>}
-                    {bike.condition && <span>{bike.condition}</span>}
-                    {bike.location?.city && <span>{bike.location.city}</span>}
-                  </div>
-                  <div className="dl-price" style={{ marginTop: 8 }}>Listed at {formatPrice(bike.price)}</div>
+            <div className="deal-detail-grid">
+              <section className="deal-panel">
+                <BikeMini bike={inquiry.bike} />
+                <div className="deal-detail-status"><Deadline expiresAt={inquiry.expiresAt} /></div>
+                <h2>Buyer message</h2>
+                <p className="deal-large-text">{inquiry.message}</p>
+                <div className="deal-data-grid large">
+                  <span>Proposed price<strong>{money(inquiry.proposedPrice)}</strong></span>
+                  <span>Preferred contact<strong>{inquiry.preferredContact || "Email"}</strong></span>
+                  <span>Viewing requested<strong>{inquiry.viewingRequested ? "Yes" : "No"}</strong></span>
+                  {inquiry.viewingDate && <span>Viewing date<strong>{dateTime(inquiry.viewingDate)}</strong></span>}
+                  {inquiry.viewingLocation && <span>Viewing location<strong>{inquiry.viewingLocation}</strong></span>}
                 </div>
-              </Link>
-            </section>
-
-            <section className="dl-panel">
-              <h3>{isBuyer ? 'Your message' : `Message from ${inquiry.buyer?.name || 'buyer'}`}</h3>
-              <p className="dl-message">{inquiry.message}</p>
-            </section>
-
-            {inquiry.responseMessage && (
-              <section className="dl-panel">
-                <h3>{status === 'rejected' ? 'Reason for rejection' : 'Seller response'}</h3>
-                <p className="dl-message">{inquiry.responseMessage}</p>
-                {inquiry.respondedAt && (
-                  <p className="dl-note" style={{ marginTop: 8 }}>{formatDateTime(inquiry.respondedAt)}</p>
-                )}
+                {inquiry.responseMessage && <div className="deal-response"><strong>Seller response</strong><p>{inquiry.responseMessage}</p><small>{dateTime(inquiry.respondedAt)}</small></div>}
               </section>
-            )}
 
-            <section className="dl-panel">
-              <h3>Details</h3>
-              <dl className="dl-kv">
-                <dt>Offered price</dt>
-                <dd>
-                  {formatPrice(inquiry.proposedPrice || bike.price)}
-                  {bike.price && inquiry.proposedPrice && inquiry.proposedPrice !== bike.price && (
-                    <span className="dl-note"> ({inquiry.proposedPrice < bike.price ? '−' : '+'}{formatPrice(Math.abs(bike.price - inquiry.proposedPrice))} vs listing)</span>
-                  )}
-                </dd>
-                <dt>Preferred contact</dt>
-                <dd>{CONTACT_LABELS[inquiry.preferredContact] || '—'}</dd>
-                {inquiry.viewingRequested && (
-                  <>
-                    <dt>Viewing</dt>
-                    <dd>
-                      {formatDate(inquiry.viewingDate)}
-                      {inquiry.viewingTime ? ` at ${inquiry.viewingTime}` : ''}
-                      {inquiry.viewingLocation ? ` · ${inquiry.viewingLocation}` : ''}
-                    </dd>
-                  </>
-                )}
-                <dt>Sent</dt>
-                <dd>{formatDateTime(inquiry.createdAt)}</dd>
-                {remaining !== null && (
-                  <>
-                    <dt>{status === 'accepted' ? 'Convert by' : 'Expires'}</dt>
-                    <dd>{formatDate(inquiry.expiresAt)} ({remaining} day{remaining === 1 ? '' : 's'} left)</dd>
-                  </>
-                )}
-              </dl>
-            </section>
-          </div>
-
-          <aside>
-            <section className="dl-panel">
-              <h3>{isBuyer ? 'Seller' : 'Buyer'}</h3>
-              <dl className="dl-kv">
-                <dt>Name</dt>
-                <dd>{other?.name || '—'}</dd>
-                {showOtherContact && (
-                  <>
-                    <dt>Email</dt>
-                    <dd>{(isSeller ? inquiry.buyerEmail : null) || other?.email || '—'}</dd>
-                    <dt>Phone</dt>
-                    <dd>{(isSeller ? inquiry.buyerPhone : null) || other?.phone || '—'}</dd>
-                  </>
-                )}
-              </dl>
-              {!showOtherContact && (
-                <p className="dl-note" style={{ marginTop: 10 }}>Contact details are shared once the seller accepts.</p>
-              )}
-            </section>
-
-            {(canRespond || canConvert || canDelete) && (
-              <section className="dl-panel">
-                <h3>Actions</h3>
-                <div className="dl-actions">
-                  {canRespond && (
-                    <>
-                      <button className="btn btn-mint" disabled={busy} onClick={() => openPanel('accept')}>
-                        <FiCheck /> Accept inquiry
-                      </button>
-                      {panel === 'accept' && (
-                        <div className="dl-confirm">
-                          <textarea
-                            placeholder="Optional message to the buyer"
-                            maxLength={500}
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            disabled={busy}
-                          />
-                          <button className="btn btn-mint" disabled={busy} onClick={handleAccept}>
-                            {busy ? 'Accepting…' : 'Confirm accept'}
-                          </button>
-                        </div>
-                      )}
-                      <button className="btn btn-danger-outline" disabled={busy} onClick={() => openPanel('reject')}>
-                        <FiX /> Reject inquiry
-                      </button>
-                      {panel === 'reject' && (
-                        <div className="dl-confirm">
-                          <textarea
-                            placeholder="Reason for rejection (optional)"
-                            maxLength={500}
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            disabled={busy}
-                          />
-                          <button className="btn btn-danger" disabled={busy} onClick={handleReject}>
-                            {busy ? 'Rejecting…' : 'Confirm reject'}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {canConvert && (
-                    <>
-                      <button className="btn btn-mint" disabled={busy} onClick={() => openPanel('convert')}>
-                        <FiShoppingCart /> Convert to purchase
-                      </button>
-                      {panel === 'convert' && (
-                        <div className="dl-confirm">
-                          <p className="dl-note">
-                            This creates a purchase at {formatPrice(inquiry.proposedPrice || bike.price)} and reserves the bike for you.
-                          </p>
-                          <button className="btn btn-mint" disabled={busy} onClick={handleConvert}>
-                            {busy ? 'Creating purchase…' : 'Confirm & continue'}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {canDelete && (
-                    <>
-                      <button className="btn btn-danger-outline" disabled={busy} onClick={() => openPanel('delete')}>
-                        <FiTrash2 /> Delete inquiry
-                      </button>
-                      {panel === 'delete' && (
-                        <div className="dl-confirm">
-                          <p className="dl-note">This permanently removes the inquiry for both parties.</p>
-                          <button className="btn btn-danger" disabled={busy} onClick={handleDelete}>
-                            {busy ? 'Deleting…' : 'Yes, delete'}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
+              <aside className="deal-panel deal-panel-side">
+                <div className="deal-people">
+                  <PersonRow label="Buyer" person={inquiry.buyer} />
+                  <PersonRow label="Seller" person={inquiry.seller} />
                 </div>
-              </section>
-            )}
+                <div className="deal-contact-stack">
+                  {inquiry.buyer?.email && <a href={`mailto:${inquiry.buyer.email}`}><FiMail /> Buyer email</a>}
+                  {inquiry.buyer?.phone && <a href={`tel:${inquiry.buyer.phone}`}><FiPhone /> Buyer phone</a>}
+                  {inquiry.seller?.email && <a href={`mailto:${inquiry.seller.email}`}><FiMail /> Seller email</a>}
+                  {inquiry.seller?.phone && <a href={`tel:${inquiry.seller.phone}`}><FiPhone /> Seller phone</a>}
+                </div>
 
-            {status === 'converted' && (
-              <p className="dl-note">This inquiry became a purchase. Find it under <Link to="/purchases" style={{ fontWeight: 700 }}>Purchases</Link>.</p>
-            )}
-          </aside>
-        </div>
+                {sellerView && status === "pending" && <div className="deal-action-stack"><button className="deal-btn deal-btn-green full" disabled={!!busy} onClick={() => action("accept")}><FiCheck /> Accept inquiry</button><button className="deal-btn deal-btn-danger full" disabled={!!busy} onClick={() => action("reject")}><FiX /> Reject inquiry</button></div>}
+                {buyerView && status === "accepted" && <button className="deal-btn deal-btn-dark full" disabled={!!busy} onClick={() => action("convert")}><FiShoppingBag /> Proceed to purchase <FiChevronRight /></button>}
+                {buyerView && status === "accepted" && <Link className="deal-btn deal-btn-light full" to={`/bikes/${inquiry.bike?._id}`}>Back to bike</Link>}
+              </aside>
+            </div>
+          </>
+        )}
       </main>
     </Layout>
-  )
+  );
 }

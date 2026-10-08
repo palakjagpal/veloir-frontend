@@ -18,49 +18,28 @@ export const dateTime = (value) =>
 
 export const dateOnly = (value) =>
   value
-    ? new Date(value).toLocaleDateString(
-        "en-IN",
-        {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        }
-      )
+    ? new Date(value).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
     : "—";
 
-export const userId = (user) =>
-  String(user?._id || user?.id || "");
+export const userId = (u) => String(u?._id || u?.id || "");
 
 export const imageUrl = (value) =>
   value || "/veloir-placeholder-bike.jpg";
 
-export const displayName = (user) =>
-  user?.name || "Unknown user";
+export const displayName = (u) => u?.name || "Unknown user";
 
-export const effectiveExpiryStatus = (
-  status,
-  expiresAt
-) => {
-  if (
-    ["pending", "accepted", "countered"].includes(
-      status
-    ) &&
-    expiresAt
-  ) {
-    if (
-      new Date(expiresAt).getTime() <
-      Date.now()
-    ) {
-      return "expired";
-    }
+export const effectiveExpiryStatus = (status, expiresAt) => {
+  if (["pending", "accepted", "countered"].includes(status) && expiresAt) {
+    if (new Date(expiresAt).getTime() < Date.now()) return "expired";
   }
-
   return status;
 };
 
 export const statusLabel = (status) =>
   String(status || "unknown")
     .replaceAll("_", " ")
-    .replace(/\b\w/g, (c) =>
-      c.toUpperCase()
-    );
+    .replace(/\b\w/g, (c) => c.toUpperCase());
