@@ -66,7 +66,7 @@ function DocumentCard({ title, icon, verified, simulated = false, document }) {
       <div className="kyc-document-main">
         <div className="kyc-document-topline">
           <div>
-            <p className="kyc-eyebrow">Identity document</p>
+            <p className="kyc-eyebrow">Buyer Identity document</p>
             <h3>{title}</h3>
           </div>
           <StatusBadge verified={verified} simulated={simulated} />
