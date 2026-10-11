@@ -698,3 +698,25 @@
   color: #815b12 !important;
   font-size: 12px;
 }
+
+.kyc-recorded-time {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #d7e9df;
+  border-radius: 12px;
+  background: #f5faf7;
+}
+
+.kyc-recorded-time span {
+  color: #587267;
+  font-size: 0.85rem;
+}
+
+.kyc-recorded-time strong {
+  color: #092532;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
