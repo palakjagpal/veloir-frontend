@@ -1,9 +1,3 @@
-/* ==========================================================
-   Veloir KYC
-   All classes are prefixed with kyc- to avoid collisions with
-   existing marketplace/deals/settings styles.
-========================================================== */
-
 .kyc-page,
 .kyc-success-page {
   padding-top: 145px;
@@ -235,7 +229,7 @@
   margin-bottom: 20px;
 }
 
-.kyc-demo-chip {
+.kyc-provider-chip {
   background: #eaf4eb;
   color: #356f67;
   border: 1px solid #c9dfcf;
@@ -626,7 +620,7 @@
     display: block;
   }
 
-  .kyc-demo-chip {
+  .kyc-provider-chip {
     display: inline-flex;
     margin-top: 12px;
   }
@@ -666,4 +660,41 @@
   .kyc-success-actions .btn {
     width: 100%;
   }
+}
+
+
+
+/* Completed verification controls */
+.kyc-flow-card.is-complete {
+  border-color: #b9ddc9;
+  box-shadow: 0 8px 24px rgba(9, 37, 50, 0.04);
+}
+
+.kyc-complete-notice {
+  margin: 0 0 18px;
+}
+
+.kyc-flow-option:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.kyc-flow-option:disabled:hover {
+  border-color: #cbd8ce;
+}
+
+.kyc-flow-option.is-complete {
+  background: #f2f8f3;
+  border-color: #b9ddc9;
+}
+
+.kyc-status-badge--simulated {
+  background: #fff3d8;
+  color: #815b12;
+  border: 1px solid #f0d9a4;
+}
+
+.kyc-simulation-note {
+  color: #815b12 !important;
+  font-size: 12px;
 }

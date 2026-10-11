@@ -459,8 +459,16 @@ function Footer() {
         </div>
 
         <div className="footer-col">
+          <h4>Manage</h4>
+          <a href="/my-bikes">Listings</a>
+          <a href="/inquiries">Inquiries</a>
+          <a href="/deals">Deals</a>
+          <a href="/offers">Offers</a>
+          <a href="/purchases">Purchases</a>
+        </div>
+
+        <div className="footer-col">
           <h4>Company</h4>
-          {/* TODO: build these pages/routes, then swap href="#" for real <Link to="..."> */}
           <a href="/about">About us</a>
           <a href="/careers">Careers</a>
           <a href="/notes-from-the-road">Notes from the road</a>

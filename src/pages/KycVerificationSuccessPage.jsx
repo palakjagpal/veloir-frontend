@@ -65,6 +65,22 @@ export default function KycVerificationSuccessPage() {
     ...(status?.drivingLicenseVerified ? ["driving_license"] : []),
     ...(status?.vehicleRcVerified ? ["vehicle_rc"] : []),
   ];
+  const isSimulated = session?.provider === "mock_digilocker";
+  const hasConfirmedProvider = session?.provider === "digilocker" || isSimulated;
+  const providerLabel = isSimulated
+    ? "Development simulation"
+    : session?.provider === "digilocker"
+      ? "DigiLocker"
+      : "Not confirmed";
+  const resultHeading = loading && success
+    ? "Checking verification status..."
+    : isSimulated
+      ? "Verification process completed"
+      : success && session?.provider === "digilocker"
+        ? "Verification successful"
+        : success
+          ? "Verification status needs confirmation"
+          : "Verification was not completed";
 
   return (
     <Layout>
@@ -75,21 +91,26 @@ export default function KycVerificationSuccessPage() {
           </div>
 
           <p className="eyebrow">Veloir KYC</p>
-          <h1>{success ? "Verification successful" : "Verification was not completed"}</h1>
+          <h1>{resultHeading}</h1>
 
           <p className="kyc-success-message">
-            {urlMessage ||
-              (success
-                ? "Your required KYC documents have been verified successfully."
-                : "Your KYC session could not be completed. Please return to KYC and try again.")}
+            {isSimulated
+              ? "The development verification process has completed and a test result was recorded. Documents were not validated against official government records."
+              : success && !hasConfirmedProvider
+                ? "The verification provider could not be confirmed. Open your KYC status page and refresh it before relying on this result."
+                : urlMessage ||
+                  (success
+                    ? "Your required KYC documents have been verified successfully."
+                    : "Your KYC session could not be completed. Please return to KYC and try again.")}
           </p>
 
-          {success && (
+          {success && hasConfirmedProvider && (
             <div className="kyc-success-email-note">
               <FiMail />
               <span>
-                A verification success email was requested for your registered Veloir email
-                address.
+                {isSimulated
+                  ? "A status notification may have been sent to your registered Veloir email address."
+                  : "A verification status email was requested for your registered Veloir email address."}
               </span>
             </div>
           )}
@@ -100,10 +121,17 @@ export default function KycVerificationSuccessPage() {
               <strong>{prettyFlow(session?.flow)}</strong>
             </div>
             <div>
-              <span>Mode</span>
-              <strong>{session?.provider === "mock_digilocker" ? "Demo / Mock" : "DigiLocker"}</strong>
+              <span>Verification method</span>
+              <strong>{providerLabel}</strong>
             </div>
           </div>
+
+          {isSimulated && (
+            <div className="kyc-alert kyc-alert--error kyc-complete-notice" role="note">
+              <FiShield />
+              <span>This result is for development testing only and is not official identity verification.</span>
+            </div>
+          )}
 
           {loading ? (
             <div className="kyc-inline-loading">Refreshing your verification status...</div>

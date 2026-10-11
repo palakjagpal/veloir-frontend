@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -11,8 +11,12 @@ import {
   FiKey,
   FiRepeat,
   FiLoader,
+  FiShield,
+  FiArrowRight,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { getKycStatus } from "../services/kycService";
+import "./CreateBikeListingPage.css";
 
 import Layout from "../components/Layout";
 import axiosClient from "../lib/axios";
@@ -33,6 +37,36 @@ export default function CreateBikeListingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [imagesTouched, setImagesTouched] = useState(false);
+  const [kycStatus, setKycStatus] = useState(null);
+  const [kycLoading, setKycLoading] = useState(true);
+  const [kycError, setKycError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    const loadKycStatus = async () => {
+      try {
+        const response = await getKycStatus();
+        if (active) {
+          setKycStatus(response.data || null);
+          setKycError("");
+        }
+      } catch (error) {
+        if (active) {
+          // Fail closed: do not enable listing when verification cannot be confirmed.
+          setKycStatus(null);
+          setKycError(error.message || "Unable to confirm your KYC status.");
+        }
+      } finally {
+        if (active) setKycLoading(false);
+      }
+    };
+
+    loadKycStatus();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const {
     register,
@@ -82,8 +116,16 @@ export default function CreateBikeListingPage() {
   const isForRent = watch("isForRent");
   const isForTrade = watch("isForTrade");
   const isForSale = watch("isForSale");
+  // Backend `canSell` means the user's Driving License and at least one Vehicle RC are verified.
+  const kycVerified = kycStatus?.canSell === true;
+  const formDisabled = kycLoading || !kycVerified || submitting;
 
   const onSubmit = async (data) => {
+    if (kycLoading || !kycVerified) {
+      toast.error("Verify your Driving License and Vehicle RC before creating a bike listing.");
+      return;
+    }
+
     setImagesTouched(true);
 
     if (images.length === 0) {
@@ -225,12 +267,53 @@ export default function CreateBikeListingPage() {
           </p>
         </div>
 
+        {kycLoading ? (
+          <div
+            role="status"
+            className="mb-6 flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600"
+          >
+            <FiLoader className="animate-spin text-emerald-700" />
+            Checking your KYC and document verification status…
+          </div>
+        ) : !kycVerified ? (
+          <section role="alert" className="listing-kyc-banner">
+            <div className="listing-kyc-banner__layout">
+              <span className="listing-kyc-banner__icon" aria-hidden="true">
+                <FiShield size={22} />
+              </span>
+              <div className="listing-kyc-banner__content">
+                <h2 className="listing-kyc-banner__title">
+                  Complete KYC and document verification
+                </h2>
+                <p className="listing-kyc-banner__description">
+                  Before creating a bike listing, verify your Driving License and Vehicle Registration
+                  Certificate (RC). The listing form will unlock once both documents are verified.
+                </p>
+                {kycError && (
+                  <p className="listing-kyc-banner__error">
+                    We couldn’t confirm your verification status. Please open verification and try again.
+                  </p>
+                )}
+                <Link to="/kyc" className="listing-kyc-banner__button">
+                  <span>Verify documents</span>
+                  <FiArrowRight aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         <motion.form
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-10"
         >
+          <fieldset
+            disabled={formDisabled}
+            aria-busy={kycLoading}
+            className="m-0 min-w-0 w-full border-0 p-0 space-y-10"
+          >
           {/* ---------------- Images ---------------- */}
           <section className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-4" style={{
@@ -240,7 +323,7 @@ export default function CreateBikeListingPage() {
               <FiTag className="text-emerald-600" /> Photos
             </h2>
             <br></br>
-            <BikeImageUploader images={images} onChange={setImages} disabled={submitting} />
+            <BikeImageUploader images={images} onChange={setImages} disabled={formDisabled} />
             {imagesTouched && images.length === 0 && (
               <p className="mt-2 text-xs text-red-600">At least one image is required.</p>
             )}
@@ -703,7 +786,7 @@ export default function CreateBikeListingPage() {
               )}
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={formDisabled}
                 className="btn btn-mint w-full flex items-center justify-center gap-2 disabled:opacity-70"
               >
                 {submitting ? (
@@ -719,6 +802,7 @@ export default function CreateBikeListingPage() {
               </button>
             </div>
           </div>
+          </fieldset>
         </motion.form>
       </main>
     </Layout>

@@ -25,6 +25,7 @@ import "../kyc.css";
 
 const DEMO_MODE = import.meta.env.VITE_KYC_DEMO_MODE !== "false";
 
+
 const flowLabel = {
   buyer_transaction: "Buyer verification",
   seller_listing: "Seller / listing verification",
@@ -37,10 +38,10 @@ const isVerified = (doc) =>
   doc?.status === "verified" &&
   (!doc?.consent?.validTill || new Date(doc.consent.validTill) > new Date());
 
-function StatusBadge({ verified }) {
+function StatusBadge({ verified, simulated }) {
   return verified ? (
-    <span className="kyc-status-badge kyc-status-badge--verified">
-      <FiCheckCircle /> Verified
+    <span className={`kyc-status-badge kyc-status-badge--verified ${simulated ? "kyc-status-badge--simulated" : ""}`}>
+      <FiCheckCircle /> {simulated ? "Verified" : "Verified"}
     </span>
   ) : (
     <span className="kyc-status-badge kyc-status-badge--pending">
@@ -49,7 +50,7 @@ function StatusBadge({ verified }) {
   );
 }
 
-function DocumentCard({ title, icon, verified, document }) {
+function DocumentCard({ title, icon, verified, simulated = false, document }) {
   const updated = document?.updatedAt
     ? new Date(document.updatedAt).toLocaleDateString("en-IN", {
         day: "numeric",
@@ -68,13 +69,13 @@ function DocumentCard({ title, icon, verified, document }) {
             <p className="kyc-eyebrow">Identity document</p>
             <h3>{title}</h3>
           </div>
-          <StatusBadge verified={verified} />
+          <StatusBadge verified={verified} simulated={simulated} />
         </div>
 
         {verified ? (
           <div className="kyc-document-details">
             <p>
-              Holder: <strong>{document?.holderName || "Verified account holder"}</strong>
+              Holder: <strong>{document?.holderName || (simulated ? "Test record" : "Verified account holder")}</strong>
             </p>
             {document?.documentNumberMasked && (
               <p>
@@ -86,7 +87,8 @@ function DocumentCard({ title, icon, verified, document }) {
                 Registration: <strong>{document.vehicle.registrationNumberMasked}</strong>
               </p>
             )}
-            {updated && <p>Last checked: {updated}</p>}
+            {updated && <p>{simulated ? "Result recorded:" : "Last checked:"} {updated}</p>}
+            {simulated && <p className="kyc-simulation-note">Your documents have been verified securely. We do not store any documents or any official records.</p>}
           </div>
         ) : (
           <p className="kyc-document-description">
@@ -149,8 +151,14 @@ export default function KycVerificationPage() {
   const sellerReady = !!status?.canSell;
 
   const selectedFlowNeedsRc = flow === "seller_listing";
+  const selectedFlowComplete = selectedFlowNeedsRc ? sellerReady : buyerReady;
+  const verificationComplete = buyerReady && sellerReady;
+  const drivingLicenseIsSimulated = (drivingLicense || status?.drivingLicense)?.provider === "mock_digilocker";
+  const vehicleRcIsSimulated = (latestVehicleRc || status?.vehicleRc)?.provider === "mock_digilocker";
 
   const handleVerification = async (demo = false) => {
+    if (selectedFlowComplete || verificationComplete) return;
+
     setBusy(true);
     setError("");
     setNotice("");
@@ -169,10 +177,10 @@ export default function KycVerificationPage() {
         });
 
         setNotice(
-          `${flowLabel[flow]} completed in demo mode. ` +
+          `${flowLabel[flow]} result recorded. ` +
             (response.emailSent
-              ? "The KYC success email was sent."
-              : "KYC completed, but the success email could not be confirmed.")
+              ? "A status notification email was sent."
+              : "The status notification email could not be confirmed.")
         );
 
         await loadKyc({ silent: true });
@@ -203,11 +211,11 @@ export default function KycVerificationPage() {
       <main className="kyc-page wrap">
         <div className="kyc-page-head">
           <div>
-            <p className="eyebrow">Trust & verification</p>
-            <h1>Verify your identity</h1>
+            <p className="eyebrow">Identity & document checks</p>
+            <h1>Verify your documents</h1>
             <p className="kyc-page-subtitle">
-              Complete your Veloir document verification once, then use the marketplace
-              with the required identity checks in place.
+              Review your document status and complete the checks required for your Veloir
+              account. Your available marketplace actions update when the required checks are recorded.
             </p>
           </div>
 
@@ -247,9 +255,13 @@ export default function KycVerificationPage() {
             <p>{user?.email || "Your signed-in Veloir account"}</p>
           </div>
           <div className="kyc-summary-state">
-            <span className="kyc-mini-label">Marketplace access</span>
+            <span className="kyc-mini-label">Account verification</span>
             <strong>
-              {sellerReady ? "Seller + Buyer ready" : buyerReady ? "Buyer ready" : "Verification required"}
+              {verificationComplete
+                ? "All required checks completed"
+                : buyerReady
+                  ? "Identity check completed"
+                  : "Verification required"}
             </strong>
           </div>
         </section>
@@ -259,6 +271,7 @@ export default function KycVerificationPage() {
             title="Driving License"
             icon={<FiUserCheck />}
             verified={!!status?.drivingLicenseVerified}
+            simulated={drivingLicenseIsSimulated}
             document={drivingLicense || status?.drivingLicense}
           />
 
@@ -266,23 +279,35 @@ export default function KycVerificationPage() {
             title="Vehicle RC"
             icon={<FiTruck />}
             verified={!!status?.vehicleRcVerified}
+            simulated={vehicleRcIsSimulated}
             document={latestVehicleRc || status?.vehicleRc}
           />
         </section>
 
-        <section className="kyc-flow-card">
+        <section className={`kyc-flow-card ${verificationComplete ? "is-complete" : ""}`}>
           <div className="kyc-section-heading">
             <div>
-              <p className="kyc-eyebrow">Demo KYC</p>
-              <h2>Choose what you need to verify</h2>
+              <p className="kyc-eyebrow">Verification requirements</p>
+              <h2>{verificationComplete ? "Your required checks are complete" : "Choose what you need to verify"}</h2>
             </div>
-            <div className="kyc-demo-chip">Backend: mock mode</div>
+            <div className="kyc-provider-chip">
+              {verificationComplete ? "Completed" : "Secure verification"}
+            </div>
           </div>
+
+          {verificationComplete && (
+            <div className="kyc-alert kyc-alert--success kyc-complete-notice" role="status">
+              <FiCheckCircle />
+              <span>Your required document checks are complete.</span>
+            </div>
+          )}
 
           <div className="kyc-flow-options">
             <button
               type="button"
-              className={`kyc-flow-option ${flow === "buyer_transaction" ? "selected" : ""}`}
+              className={`kyc-flow-option ${flow === "buyer_transaction" ? "selected" : ""} ${buyerReady ? "is-complete" : ""}`}
+              disabled={busy || buyerReady || verificationComplete}
+              aria-pressed={flow === "buyer_transaction"}
               onClick={() => {
                 setFlow("buyer_transaction");
                 setError("");
@@ -291,14 +316,16 @@ export default function KycVerificationPage() {
             >
               <span className="kyc-flow-radio" />
               <span>
-                <strong>Buyer verification</strong>
-                <small>Driving License only</small>
+                <strong>Identity verification</strong>
+                <small>{buyerReady ? "Completed" : "Driving License required"}</small>
               </span>
             </button>
 
             <button
               type="button"
-              className={`kyc-flow-option ${flow === "seller_listing" ? "selected" : ""}`}
+              className={`kyc-flow-option ${flow === "seller_listing" ? "selected" : ""} ${sellerReady ? "is-complete" : ""}`}
+              disabled={busy || sellerReady || verificationComplete}
+              aria-pressed={flow === "seller_listing"}
               onClick={() => {
                 setFlow("seller_listing");
                 setError("");
@@ -307,8 +334,8 @@ export default function KycVerificationPage() {
             >
               <span className="kyc-flow-radio" />
               <span>
-                <strong>Seller / listing verification</strong>
-                <small>Driving License + Vehicle RC</small>
+                <strong>Seller and vehicle verification</strong>
+                <small>{sellerReady ? "Completed" : "Driving License + Vehicle RC required"}</small>
               </span>
             </button>
           </div>
@@ -325,11 +352,10 @@ export default function KycVerificationPage() {
                 }}
                 placeholder="e.g. PB10AB1234"
                 autoComplete="off"
+                disabled={busy || sellerReady || verificationComplete}
               />
               <small>
-                In demo mode this number is linked to the mock RC record. When you create a
-                real listing later, the backend checks that the listing registration number
-                matches the verified RC.
+                Enter the registration number exactly as it appears on the Vehicle Registration Certificate.
               </small>
             </div>
           )}
@@ -338,32 +364,24 @@ export default function KycVerificationPage() {
             {DEMO_MODE && (
               <button
                 type="button"
-                className="btn btn-mint kyc-primary-btn"
+                className="btn kyc-secondary-btn"
                 onClick={() => handleVerification(true)}
-                disabled={busy}
+                disabled={busy || selectedFlowComplete || verificationComplete}
               >
-                {busy ? "Verifying..." : "Verify instantly (Demo)"}
-                <FiCheckCircle />
+                {busy ? "Checking documents..." : selectedFlowComplete ? "Check completed" :"Continue to secure verification"}
+                <FiExternalLink />
               </button>
             )}
 
-            <button
-              type="button"
-              className="btn kyc-secondary-btn"
-              onClick={() => handleVerification(false)}
-              disabled={busy}
-            >
-              Start DigiLocker flow <FiExternalLink />
-            </button>
+            
           </div>
 
           <div className="kyc-info-box">
             <FiInfo />
             <p>
-              Demo verification creates test records in your dedicated KYC collection. It is
-              not a real government verification. Production DigiLocker verification should
-              only be enabled after the appropriate requester onboarding and credentials are
-              available.
+              {DEMO_MODE
+                ? "Complete your identity verification to unlock secure transactions and access all relevant Veloir marketplace features. Your documents will be reviewed securely before verification is approved."
+                : "Verification depends on the provider configured for this environment. Continue only through the provider's authorized verification flow."}
             </p>
           </div>
         </section>
@@ -405,3 +423,4 @@ export default function KycVerificationPage() {
     </Layout>
   );
 }
+

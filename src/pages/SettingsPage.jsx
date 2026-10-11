@@ -1,7 +1,8 @@
 // frontend/src/pages/SettingsPage.jsx
 import { useEffect, useState, useRef } from 'react'
-import { FiCamera, FiCheckCircle, FiLock, FiUser, FiAlertCircle, FiPhone, FiMail, FiShield } from 'react-icons/fi'
+import { FiCamera, FiCheckCircle, FiLock, FiUser, FiAlertCircle, FiPhone, FiMail, FiShield, FiArrowRight } from 'react-icons/fi'
 import { useAuth } from '../context/AuthContext'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { api, getImageUrl } from '../lib/api'
 import { uploadAvatar } from '../lib/authService'
@@ -452,6 +453,24 @@ export default function SettingsPage() {
                   </button>
                 </form>
               )}
+            </section>
+
+            {/* KYC / Document Verification Card */}
+            <section className="settings-card">
+              <div className="settings-card-heading">
+                <FiShield />
+                <div>
+                  <h2>KYC &amp; document verification</h2>
+                  <p>Verify your Driving License and vehicle RC to unlock bike listing and protected marketplace actions.</p>
+                </div>
+              </div>
+
+              <Link
+                to="/kyc"
+                className="btn btn-mint inline-flex items-center justify-center gap-2"
+              >
+                Open verification <FiArrowRight />
+              </Link>
             </section>
 
           </div>
