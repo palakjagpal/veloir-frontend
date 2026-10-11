@@ -87,8 +87,30 @@ function DocumentCard({ title, icon, verified, simulated = false, document }) {
                 Registration: <strong>{document.vehicle.registrationNumberMasked}</strong>
               </p>
             )}
-            {updated && <p>{simulated ? "Result recorded:" : "Last checked:"} {updated}</p>}
-            {simulated && <p className="kyc-simulation-note">Your documents have been verified securely. We do not store any documents or any official records.</p>}
+            {documents?.some((doc) => doc.status === "verified") && (
+              <div className="kyc-recorded-time">
+                <span>Result recorded on</span>
+
+                <strong>
+                  {formatRecordedDateTime(
+                    documents
+                      .filter((doc) => doc.status === "verified")
+                      .sort(
+                        (a, b) =>
+                          new Date(b.lastCheckedAt || b.updatedAt || b.createdAt) -
+                          new Date(a.lastCheckedAt || a.updatedAt || a.createdAt)
+                      )[0]?.lastCheckedAt ||
+                      documents
+                        .filter((doc) => doc.status === "verified")
+                        .sort(
+                          (a, b) =>
+                            new Date(b.updatedAt || b.createdAt) -
+                            new Date(a.updatedAt || a.createdAt)
+                        )[0]?.updatedAt
+                  )}
+                </strong>
+              </div>
+            )}
           </div>
         ) : (
           <p className="kyc-document-description">
@@ -99,6 +121,27 @@ function DocumentCard({ title, icon, verified, simulated = false, document }) {
     </article>
   );
 }
+
+const formatRecordedDateTime = (date) => {
+  if (!date) return "Not available";
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Not available";
+  }
+
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+    timeZoneName: "short",
+  }).format(parsedDate);
+};
 
 export default function KycVerificationPage() {
   const { user } = useAuth();
