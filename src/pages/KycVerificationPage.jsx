@@ -328,6 +328,7 @@ export default function KycVerificationPage() {
             <strong>{formatRecordedDateTime(latestRecordedAt)}</strong>
           </div>
         )}
+        <br></br>
 
         <section className={`kyc-flow-card ${verificationComplete ? "is-complete" : ""}`}>
           <div className="kyc-section-heading">
@@ -437,14 +438,7 @@ export default function KycVerificationPage() {
             </button>
           </div>
 
-          <div className="kyc-info-box">
-            <FiInfo />
-            <p>
-              {DEMO_MODE
-                ? "Demo verification records a test workflow and does not validate documents against official government records."
-                : "Verification depends on the provider configured for this environment. Continue only through the provider's authorized verification flow."}
-            </p>
-          </div>
+          
         </section>
 
         <section className="kyc-access-card">
