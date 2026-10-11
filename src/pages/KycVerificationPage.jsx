@@ -5,7 +5,6 @@ import {
   FiCheckCircle,
   FiClock,
   FiExternalLink,
-  FiFileText,
   FiInfo,
   FiRefreshCw,
   FiShield,
@@ -25,111 +24,15 @@ import "../kyc.css";
 
 const DEMO_MODE = import.meta.env.VITE_KYC_DEMO_MODE !== "false";
 
-
-const flowLabel = {
-  buyer_transaction: "Buyer verification",
-  seller_listing: "Seller / listing verification",
-};
-
-const documentTitle = (type) =>
-  type === "driving_license" ? "Driving License" : "Vehicle RC";
-
 const isVerified = (doc) =>
   doc?.status === "verified" &&
   (!doc?.consent?.validTill || new Date(doc.consent.validTill) > new Date());
 
-function StatusBadge({ verified, simulated }) {
-  return verified ? (
-    <span className={`kyc-status-badge kyc-status-badge--verified ${simulated ? "kyc-status-badge--simulated" : ""}`}>
-      <FiCheckCircle /> {simulated ? "Verified" : "Verified"}
-    </span>
-  ) : (
-    <span className="kyc-status-badge kyc-status-badge--pending">
-      <FiClock /> Required
-    </span>
-  );
-}
-
-function DocumentCard({ title, icon, verified, simulated = false, document }) {
-  const updated = document?.updatedAt
-    ? new Date(document.updatedAt).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : null;
-
-  return (
-    <article className={`kyc-document-card ${verified ? "is-verified" : ""}`}>
-      <div className="kyc-document-icon">{icon}</div>
-
-      <div className="kyc-document-main">
-        <div className="kyc-document-topline">
-          <div>
-            <p className="kyc-eyebrow">Buyer Identity document</p>
-            <h3>{title}</h3>
-          </div>
-          <StatusBadge verified={verified} simulated={simulated} />
-        </div>
-
-        {verified ? (
-          <div className="kyc-document-details">
-            <p>
-              Holder: <strong>{document?.holderName || (simulated ? "Test record" : "Verified account holder")}</strong>
-            </p>
-            {document?.documentNumberMasked && (
-              <p>
-                Document: <strong>{document.documentNumberMasked}</strong>
-              </p>
-            )}
-            {document?.vehicle?.registrationNumberMasked && (
-              <p>
-                Registration: <strong>{document.vehicle.registrationNumberMasked}</strong>
-              </p>
-            )}
-            {documents?.some((doc) => doc.status === "verified") && (
-              <div className="kyc-recorded-time">
-                <span>Result recorded on</span>
-
-                <strong>
-                  {formatRecordedDateTime(
-                    documents
-                      .filter((doc) => doc.status === "verified")
-                      .sort(
-                        (a, b) =>
-                          new Date(b.lastCheckedAt || b.updatedAt || b.createdAt) -
-                          new Date(a.lastCheckedAt || a.updatedAt || a.createdAt)
-                      )[0]?.lastCheckedAt ||
-                      documents
-                        .filter((doc) => doc.status === "verified")
-                        .sort(
-                          (a, b) =>
-                            new Date(b.updatedAt || b.createdAt) -
-                            new Date(a.updatedAt || a.createdAt)
-                        )[0]?.updatedAt
-                  )}
-                </strong>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="kyc-document-description">
-            This document is required before protected Veloir actions can continue.
-          </p>
-        )}
-      </div>
-    </article>
-  );
-}
-
 const formatRecordedDateTime = (date) => {
-  if (!date) return "Not available";
+  if (!date) return null;
 
   const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Not available";
-  }
+  if (Number.isNaN(parsedDate.getTime())) return null;
 
   return new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
@@ -142,6 +45,75 @@ const formatRecordedDateTime = (date) => {
     timeZoneName: "short",
   }).format(parsedDate);
 };
+
+function StatusBadge({ verified, simulated }) {
+  return verified ? (
+    <span
+      className={`kyc-status-badge kyc-status-badge--verified ${
+        simulated ? "kyc-status-badge--simulated" : ""
+      }`}
+    >
+      <FiCheckCircle /> Verified
+    </span>
+  ) : (
+    <span className="kyc-status-badge kyc-status-badge--pending">
+      <FiClock /> Required
+    </span>
+  );
+}
+
+function DocumentCard({ title, icon, verified, simulated = false, document }) {
+  const recordedAt =
+    document?.lastCheckedAt || document?.updatedAt || document?.createdAt;
+  const formattedRecordedAt = formatRecordedDateTime(recordedAt);
+
+  return (
+    <article className={`kyc-document-card ${verified ? "is-verified" : ""}`}>
+      <div className="kyc-document-icon">{icon}</div>
+
+      <div className="kyc-document-main">
+        <div className="kyc-document-topline">
+          <div>
+            <p className="kyc-eyebrow">Identity document</p>
+            <h3>{title}</h3>
+          </div>
+          <StatusBadge verified={verified} simulated={simulated} />
+        </div>
+
+        {verified ? (
+          <div className="kyc-document-details">
+            <p>
+              Holder: <strong>{document?.holderName || (simulated ? "Test record" : "Verified account holder")}</strong>
+            </p>
+
+            {document?.documentNumberMasked && (
+              <p>
+                Document: <strong>{document.documentNumberMasked}</strong>
+              </p>
+            )}
+
+            {document?.vehicle?.registrationNumberMasked && (
+              <p>
+                Registration: <strong>{document.vehicle.registrationNumberMasked}</strong>
+              </p>
+            )}
+
+            {formattedRecordedAt && (
+              <div className="kyc-recorded-time">
+                <span>Result recorded on</span>
+                <strong>{formattedRecordedAt}</strong>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="kyc-document-description">
+            This document is required before protected Veloir actions can continue.
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
 
 export default function KycVerificationPage() {
   const { user } = useAuth();
@@ -164,10 +136,16 @@ export default function KycVerificationPage() {
         getKycDocuments(),
       ]);
 
-      setStatus(statusResponse.data || null);
-      setDocuments(documentsResponse.data || []);
+      setStatus(statusResponse?.data?.data ?? statusResponse?.data ?? null);
+      setDocuments(
+        Array.isArray(documentsResponse?.data?.data)
+          ? documentsResponse.data.data
+          : Array.isArray(documentsResponse?.data)
+            ? documentsResponse.data
+            : []
+      );
     } catch (err) {
-      setError(err.message || "Unable to load your KYC status.");
+      setError(err?.message || "Unable to load your KYC status.");
     } finally {
       setRefreshing(false);
     }
@@ -190,14 +168,32 @@ export default function KycVerificationPage() {
     [documents]
   );
 
-  const buyerReady = !!status?.canBuy;
-  const sellerReady = !!status?.canSell;
-
+  const buyerReady = Boolean(status?.canBuy);
+  const sellerReady = Boolean(status?.canSell);
   const selectedFlowNeedsRc = flow === "seller_listing";
   const selectedFlowComplete = selectedFlowNeedsRc ? sellerReady : buyerReady;
   const verificationComplete = buyerReady && sellerReady;
-  const drivingLicenseIsSimulated = (drivingLicense || status?.drivingLicense)?.provider === "mock_digilocker";
-  const vehicleRcIsSimulated = (latestVehicleRc || status?.vehicleRc)?.provider === "mock_digilocker";
+
+  const drivingLicenseIsSimulated =
+    (drivingLicense || status?.drivingLicense)?.provider === "mock_digilocker";
+  const vehicleRcIsSimulated =
+    (latestVehicleRc || status?.vehicleRc)?.provider === "mock_digilocker";
+
+  const latestVerifiedDocument = useMemo(() => {
+    return documents
+      .filter((doc) => isVerified(doc))
+      .sort(
+        (a, b) =>
+          new Date(b.lastCheckedAt || b.updatedAt || b.createdAt || 0).getTime() -
+          new Date(a.lastCheckedAt || a.updatedAt || a.createdAt || 0).getTime()
+      )[0] || null;
+  }, [documents]);
+
+  const latestRecordedAt = latestVerifiedDocument
+    ? latestVerifiedDocument.lastCheckedAt ||
+      latestVerifiedDocument.updatedAt ||
+      latestVerifiedDocument.createdAt
+    : null;
 
   const handleVerification = async (demo = false) => {
     if (selectedFlowComplete || verificationComplete) return;
@@ -220,9 +216,9 @@ export default function KycVerificationPage() {
         });
 
         setNotice(
-            (response.emailSent
-              ? "A status notification email was sent."
-              : "The status notification email could not be confirmed.")
+          response?.emailSent
+            ? "Verification workflow completed. A status notification email was sent."
+            : "Verification workflow completed. The status notification email could not be confirmed."
         );
 
         await loadKyc({ silent: true });
@@ -236,13 +232,13 @@ export default function KycVerificationPage() {
           : "",
       });
 
-      if (!response.authorizationUrl) {
+      if (!response?.authorizationUrl) {
         throw new Error("The backend did not return a DigiLocker authorization URL.");
       }
 
       window.location.assign(response.authorizationUrl);
     } catch (err) {
-      setError(err.message || "Unable to start KYC verification.");
+      setError(err?.message || "Unable to start KYC verification.");
     } finally {
       setBusy(false);
     }
@@ -253,7 +249,7 @@ export default function KycVerificationPage() {
       <main className="kyc-page wrap">
         <div className="kyc-page-head">
           <div>
-            <p className="eyebrow">Identity & document checks</p>
+            <p className="eyebrow">Identity &amp; document checks</p>
             <h1>Verify your documents</h1>
             <p className="kyc-page-subtitle">
               Review your document status and complete the checks required for your Veloir
@@ -274,14 +270,14 @@ export default function KycVerificationPage() {
         </div>
 
         {error && (
-          <div className="kyc-alert kyc-alert--error">
+          <div className="kyc-alert kyc-alert--error" role="alert">
             <FiXCircle />
             <span>{error}</span>
           </div>
         )}
 
         {notice && (
-          <div className="kyc-alert kyc-alert--success">
+          <div className="kyc-alert kyc-alert--success" role="status">
             <FiCheckCircle />
             <span>{notice}</span>
           </div>
@@ -312,25 +308,36 @@ export default function KycVerificationPage() {
           <DocumentCard
             title="Driving License"
             icon={<FiUserCheck />}
-            verified={!!status?.drivingLicenseVerified}
+            verified={Boolean(status?.drivingLicenseVerified)}
             simulated={drivingLicenseIsSimulated}
             document={drivingLicense || status?.drivingLicense}
           />
-
           <DocumentCard
             title="Vehicle RC"
             icon={<FiTruck />}
-            verified={!!status?.vehicleRcVerified}
+            verified={Boolean(status?.vehicleRcVerified)}
             simulated={vehicleRcIsSimulated}
             document={latestVehicleRc || status?.vehicleRc}
           />
         </section>
 
+        {latestRecordedAt && (
+          <div className="kyc-recorded-time kyc-recorded-time--summary">
+            <FiClock />
+            <span>Latest verification result recorded on</span>
+            <strong>{formatRecordedDateTime(latestRecordedAt)}</strong>
+          </div>
+        )}
+
         <section className={`kyc-flow-card ${verificationComplete ? "is-complete" : ""}`}>
           <div className="kyc-section-heading">
             <div>
               <p className="kyc-eyebrow">Verification requirements</p>
-              <h2>{verificationComplete ? "Your required checks are complete" : "Choose what you need to verify"}</h2>
+              <h2>
+                {verificationComplete
+                  ? "Your required checks are complete"
+                  : "Choose what you need to verify"}
+              </h2>
             </div>
             <div className="kyc-provider-chip">
               {verificationComplete ? "Completed" : "Secure verification"}
@@ -410,7 +417,11 @@ export default function KycVerificationPage() {
                 onClick={() => handleVerification(true)}
                 disabled={busy || selectedFlowComplete || verificationComplete}
               >
-                {busy ? "Checking documents..." : selectedFlowComplete ? "Check completed" :"Continue to secure verification"}
+                {busy
+                  ? "Checking documents..."
+                  : selectedFlowComplete
+                    ? "Check completed"
+                    : "Continue to secure verification"}
                 <FiExternalLink />
               </button>
             )}
@@ -421,17 +432,16 @@ export default function KycVerificationPage() {
               onClick={() => handleVerification(false)}
               disabled={busy || selectedFlowComplete || verificationComplete}
             >
-              {selectedFlowComplete ? "Check completed" : "Continue to secure verification"} <FiExternalLink />
-            </button>            
-
-            
+              {selectedFlowComplete ? "Check completed" : "Continue to secure verification"}
+              <FiExternalLink />
+            </button>
           </div>
 
           <div className="kyc-info-box">
             <FiInfo />
             <p>
               {DEMO_MODE
-                ? "Complete your identity verification to unlock secure transactions and access all relevant Veloir marketplace features. Your documents will be reviewed securely before verification is approved."
+                ? "Demo verification records a test workflow and does not validate documents against official government records."
                 : "Verification depends on the provider configured for this environment. Continue only through the provider's authorized verification flow."}
             </p>
           </div>
@@ -474,4 +484,3 @@ export default function KycVerificationPage() {
     </Layout>
   );
 }
-
