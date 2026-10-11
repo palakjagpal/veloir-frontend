@@ -177,7 +177,6 @@ export default function KycVerificationPage() {
         });
 
         setNotice(
-          `${flowLabel[flow]} result recorded. ` +
             (response.emailSent
               ? "A status notification email was sent."
               : "The status notification email could not be confirmed.")
