@@ -372,6 +372,15 @@ export default function KycVerificationPage() {
               </button>
             )}
 
+            <button
+              type="button"
+              className="btn kyc-secondary-btn"
+              onClick={() => handleVerification(false)}
+              disabled={busy || selectedFlowComplete || verificationComplete}
+            >
+              {selectedFlowComplete ? "Check completed" : "Continue to secure verification"} <FiExternalLink />
+            </button>            
+
             
           </div>
 
