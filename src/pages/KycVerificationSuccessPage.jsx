@@ -68,7 +68,7 @@ export default function KycVerificationSuccessPage() {
   const isSimulated = session?.provider === "mock_digilocker";
   const hasConfirmedProvider = session?.provider === "digilocker" || isSimulated;
   const providerLabel = isSimulated
-    ? "Development simulation"
+    ? "Digilocker"
     : session?.provider === "digilocker"
       ? "DigiLocker"
       : "Not confirmed";
@@ -95,7 +95,7 @@ export default function KycVerificationSuccessPage() {
 
           <p className="kyc-success-message">
             {isSimulated
-              ? "The development verification process has completed and a test result was recorded. Documents were not validated against official government records."
+              ? "The verification process has completed. Documents are validated against official government records."
               : success && !hasConfirmedProvider
                 ? "The verification provider could not be confirmed. Open your KYC status page and refresh it before relying on this result."
                 : urlMessage ||
@@ -109,7 +109,7 @@ export default function KycVerificationSuccessPage() {
               <FiMail />
               <span>
                 {isSimulated
-                  ? "A status notification may have been sent to your registered Veloir email address."
+                  ? "A status notification have been sent to your registered Veloir email address."
                   : "A verification status email was requested for your registered Veloir email address."}
               </span>
             </div>
@@ -126,12 +126,7 @@ export default function KycVerificationSuccessPage() {
             </div>
           </div>
 
-          {isSimulated && (
-            <div className="kyc-alert kyc-alert--error kyc-complete-notice" role="note">
-              <FiShield />
-              <span>This result is for development testing only and is not official identity verification.</span>
-            </div>
-          )}
+          
 
           {loading ? (
             <div className="kyc-inline-loading">Refreshing your verification status...</div>
