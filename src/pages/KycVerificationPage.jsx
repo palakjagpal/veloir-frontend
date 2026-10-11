@@ -411,7 +411,7 @@ export default function KycVerificationPage() {
           )}
 
           <div className="kyc-action-row">
-            {DEMO_MODE && (
+            {/*{DEMO_MODE && (
               <button
                 type="button"
                 className="btn kyc-secondary-btn"
@@ -422,10 +422,10 @@ export default function KycVerificationPage() {
                   ? "Checking documents..."
                   : selectedFlowComplete
                     ? "Check completed"
-                    : "Continue to secure verification"}
+                    : "Continue to secure verification using Digilocker"}
                 <FiExternalLink />
               </button>
-            )}
+            )}*/}
 
             <button
               type="button"
@@ -433,7 +433,7 @@ export default function KycVerificationPage() {
               onClick={() => handleVerification(false)}
               disabled={busy || selectedFlowComplete || verificationComplete}
             >
-              {selectedFlowComplete ? "Check completed" : "Continue to secure verification"}
+              {selectedFlowComplete ? "Check completed" : "Continue to secure verification using Digilocker"}
               <FiExternalLink />
             </button>
           </div>
