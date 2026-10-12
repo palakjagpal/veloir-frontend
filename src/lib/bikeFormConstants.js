@@ -3,9 +3,7 @@ export const CATEGORIES = [
   "Cruiser",
   "Touring",
   "Adventure",
-  "Off-Road",
-  "Scooter",
-  "Other",
+  "Off-Road"
 ];
 
 export const CONDITIONS = [
