@@ -66,7 +66,7 @@ export default function HomePage() {
               <Link to="/bikes">
                 Explore bikes <FiArrowRight />
               </Link>
-              <Link to="/sell">List your bike</Link>
+              <Link to="/bikes/create">List your bike</Link>
             </div>
           </div>
           <div className="hero-caption">
