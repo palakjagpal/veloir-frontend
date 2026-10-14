@@ -13,11 +13,13 @@
     "@vitejs/plugin-react": "latest",
     "axios": "^1.20.0",
     "framer-motion": "latest",
+    "leaflet": "^1.9.4",
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "^7.88.0",
     "react-hot-toast": "^2.6.1",
     "react-icons": "latest",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "latest",
     "tailwindcss": "latest",
     "vite": "latest"

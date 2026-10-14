@@ -26,6 +26,7 @@ export async function api(path, options = {}) {
   if (!response.ok){
     const err = new Error(data.message || data.error || "Something went wrong");
     Object.assign(err, data);
+    err.status = response.status;
     throw err;
   }
   return data;

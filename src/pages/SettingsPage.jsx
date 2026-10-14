@@ -7,6 +7,7 @@ import Layout from '../components/Layout'
 import { api, getImageUrl } from '../lib/api'
 import { uploadAvatar } from '../lib/authService'
 import '../settings.css'
+import AddressManagement from '../components/AddressManagement'
 
 export default function SettingsPage() {
   const { user, setUser } = useAuth()
@@ -472,6 +473,8 @@ export default function SettingsPage() {
                 Open verification <FiArrowRight />
               </Link>
             </section>
+
+            <AddressManagement />
 
           </div>
         )}
