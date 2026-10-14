@@ -20,7 +20,7 @@ import {
   FiPhone,
   FiCheckCircle,
   FiBriefcase,
-  FiInbox, FiPercent, FiShoppingBag
+  FiInbox, FiPercent, FiShoppingBag, FiCalendar, FiShield
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -138,6 +138,29 @@ function Header() {
               >
                 <FiList /> My Listings
               </Link>
+              <Link
+                to="/rentals"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiCalendar /> My Rentals
+              </Link>
+              <Link
+                to="/rental-management"
+                className="mobile-nav-link"
+                onClick={() => setOpen(false)}
+              >
+                <FiCalendar /> Rental Management
+              </Link>
+              {user.role === "admin" && (
+                <Link
+                  to="/admin/rentals/disputes"
+                  className="mobile-nav-link"
+                  onClick={() => setOpen(false)}
+                >
+                  <FiShield /> Rental Disputes
+                </Link>
+              )}
               <Link
                 to="/inquiries"
                 className="mobile-nav-link"
@@ -268,6 +291,29 @@ function Header() {
                 >
                   <FiList /> My Listings
                 </Link>
+                <Link
+                  to="/rentals"
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiCalendar /> My Rentals
+                </Link>
+                <Link
+                  to="/rental-management"
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiCalendar /> Rental Management
+                </Link>
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin/rentals/disputes"
+                    className="dropdown-item"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    <FiShield /> Rental Disputes
+                  </Link>
+                )}
                 <Link
                   to="/inquiries"
                   className="dropdown-item"
@@ -404,6 +450,7 @@ function CommunitySignup() {
 }
 
 function Footer() {
+  const { user } = useAuth();
   return (
     <footer className="site-footer">
       <div className="footer-top wrap">
@@ -465,6 +512,9 @@ function Footer() {
           <a href="/deals">Deals</a>
           <a href="/offers">Offers</a>
           <a href="/purchases">Purchases</a>
+          <Link to="/rentals">My Rentals</Link>
+          <Link to="/rental-management">Rental Management</Link>
+          {user?.role === "admin" && <Link to="/admin/rentals/disputes">Rental Disputes</Link>}
         </div>
 
         <div className="footer-col">

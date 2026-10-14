@@ -28,6 +28,11 @@ import {
   PurchaseDetailPage,
   TransferDetailPage
 } from "./pages/deals";
+import MyRentalsPage from "./pages/rentals/MyRentalsPage";
+import RentalCheckoutPage from "./pages/rentals/RentalCheckoutPage";
+import RentalDetailPage from "./pages/rentals/RentalDetailPage";
+import OwnerRentalManagementPage from "./pages/rentals/OwnerRentalManagementPage";
+import AdminRentalDisputesPage from "./pages/rentals/AdminRentalDisputesPage";
 
 // Small helper to keep the route table readable.
 const guard = (element, roles) => (
@@ -67,6 +72,13 @@ export default function App() {
         <Route path="/purchases" element={guard(<PurchasesPage />)} />
         <Route path="/purchases/:id" element={guard(<PurchaseDetailPage />)} />
         <Route path="/transfers/:id" element={guard(<TransferDetailPage />)} />
+
+        {/* Rentals — added without replacing existing buy/sell/trade or deals routes */}
+        <Route path="/rentals" element={guard(<MyRentalsPage />)} />
+        <Route path="/rentals/:id/checkout" element={guard(<RentalCheckoutPage />)} />
+        <Route path="/rentals/:id" element={guard(<RentalDetailPage />)} />
+        <Route path="/rental-management" element={guard(<OwnerRentalManagementPage />)} />
+        <Route path="/admin/rentals/disputes" element={guard(<AdminRentalDisputesPage />, ["admin"])} />
 
         <Route path="*" element={<HomePage />} />
       </Routes>

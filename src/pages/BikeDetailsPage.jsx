@@ -34,6 +34,7 @@ import SendInquiryModal from "../components/deals/SendInquiryModal";
 import MakeOfferModal from "../components/deals/MakeOfferModal";
 
 import { getUserId } from "../lib/inquiryUtils";
+import RentalBookingWidget from "../components/rentals/RentalBookingWidget";
 
 export default function BikeDetailsPage() {
   const { id } = useParams();
@@ -1098,6 +1099,11 @@ export default function BikeDetailsPage() {
 
             </section>
           )}
+
+        {/* =================================================
+            RENTAL BOOKING WORKFLOW — isolated component
+        ================================================= */}
+        {bike.isForRent && <RentalBookingWidget bike={bike} />}
 
         {/* =================================================
             TRADE DETAILS
