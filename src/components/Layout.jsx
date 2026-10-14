@@ -285,6 +285,13 @@ function Header() {
                 </div>
                 <div className="dropdown-divider" />
                 <Link
+                  to="/settings"
+                  className="dropdown-item"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  <FiSettings /> Account
+                </Link>
+                <Link
                   to="/my-bikes"
                   className="dropdown-item"
                   onClick={() => setShowDropdown(false)}
@@ -343,13 +350,7 @@ function Header() {
                 >
                   <FiShoppingBag /> Purchases
                 </Link>
-                <Link
-                  to="/settings"
-                  className="dropdown-item"
-                  onClick={() => setShowDropdown(false)}
-                >
-                  <FiSettings /> Account
-                </Link>
+                
                 <button className="dropdown-item logout" onClick={handleLogout}>
                   <FiLogOut /> Logout
                 </button>
