@@ -8,16 +8,24 @@ import Layout from '../components/Layout'
 import { api, getImageUrl } from '../lib/api'
 import { uploadAvatar } from '../lib/authService'
 import '../settings.css'
+import AddressManagement from '../components/AddressManagement'
 
 export default function SettingsPage() {
   const { user, setUser } = useAuth()
   const reduceMotion = useReducedMotion()
-  const cardVariants = {
-    hidden: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 },
-    visible: reduceMotion
-      ? { opacity: 1 }
-      : { opacity: 1, y: 0, transition: { duration: 0.42, ease: 'easeOut' } },
-  }
+  // Animate each card independently. This avoids cards remaining stuck at their
+  // initial opacity when parent/child stagger variants fail to coordinate.
+  const cardEntrance = (delay = 0) => ({
+    // Keep opacity at its natural CSS value so the UI can never disappear if
+    // an animation is interrupted; animate only the small vertical movement.
+    initial: reduceMotion ? false : { y: 14 },
+    animate: { y: 0 },
+    transition: {
+      duration: reduceMotion ? 0 : 0.36,
+      delay: reduceMotion ? 0 : delay,
+      ease: 'easeOut',
+    },
+  })
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({ name: '', phone: '' })
   const [passwords, setPasswords] = useState({ 
@@ -285,17 +293,9 @@ export default function SettingsPage() {
             Loading profile...
           </motion.div>
         ) : (
-          <motion.div
-            className="settings-grid"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.075 } },
-            }}
-          >
+          <div className="settings-grid">
             {/* Profile Information Card */}
-            <motion.section className="settings-card" variants={cardVariants}>
+            <motion.section className="settings-card" {...cardEntrance(0)}>
               <div className="settings-card-heading">
                 <FiUser />
                 <div>
@@ -392,7 +392,7 @@ export default function SettingsPage() {
             </motion.section>
 
             {/* Change Password Card */}
-            <motion.section className="settings-card" variants={cardVariants}>
+            <motion.section className="settings-card" {...cardEntrance(0.07)}>
               <div className="settings-card-heading">
                 <FiLock />
                 <div>
@@ -457,7 +457,7 @@ export default function SettingsPage() {
             </motion.section>
 
             {/* Phone Verification Card */}
-            <motion.section className="settings-card" variants={cardVariants}>
+            <motion.section className="settings-card" {...cardEntrance(0.14)}>
               <div className="settings-card-heading">
                 <FiPhone />
                 <div>
@@ -497,7 +497,29 @@ export default function SettingsPage() {
               )}
             </motion.section>
 
-          </motion.div>
+            {/* KYC / Document Verification Card */}
+            <motion.section className="settings-card" {...cardEntrance(0.21)}>
+              <div className="settings-card-heading">
+                <FiShield />
+                <div>
+                  <h2>KYC &amp; document verification</h2>
+                  <p>Verify your Driving License and vehicle RC to unlock bike listing and protected marketplace actions.</p>
+                </div>
+              </div>
+
+              <Link
+                to="/kyc"
+                className="btn btn-mint inline-flex items-center justify-center gap-2"
+              >
+                Open verification <FiArrowRight />
+              </Link>
+            </motion.section>
+
+            <motion.div className="settings-grid-wide" {...cardEntrance(0.28)}>
+              <AddressManagement />
+            </motion.div>
+
+          </div>
         )}
       </main>
     </Layout>
