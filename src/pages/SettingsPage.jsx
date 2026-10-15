@@ -1,5 +1,6 @@
 // frontend/src/pages/SettingsPage.jsx
 import { useEffect, useState, useRef } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { FiCamera, FiCheckCircle, FiLock, FiUser, FiAlertCircle, FiPhone, FiMail, FiShield, FiArrowRight } from 'react-icons/fi'
 import { useAuth } from '../context/AuthContext'
 import { Link } from 'react-router-dom'
@@ -10,6 +11,13 @@ import '../settings.css'
 
 export default function SettingsPage() {
   const { user, setUser } = useAuth()
+  const reduceMotion = useReducedMotion()
+  const cardVariants = {
+    hidden: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 18 },
+    visible: reduceMotion
+      ? { opacity: 1 }
+      : { opacity: 1, y: 0, transition: { duration: 0.42, ease: 'easeOut' } },
+  }
   const [profile, setProfile] = useState(null)
   const [form, setForm] = useState({ name: '', phone: '' })
   const [passwords, setPasswords] = useState({ 
@@ -231,29 +239,63 @@ export default function SettingsPage() {
   return (
     <Layout>
       <main className="settings wrap">
-        <div className="settings-heading">
+        <motion.div
+          className="settings-heading"
+          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.45, ease: 'easeOut' }}
+        >
+          <span className="settings-eyebrow">YOUR VELOIR PROFILE</span>
           <h1>Account</h1>
           <p>Manage your personal details and account security.</p>
-        </div>
+        </motion.div>
 
         {/* Messages */}
         {error && (
-          <p className="settings-message error">
+          <motion.p
+            className="settings-message error"
+            role="alert"
+            initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.22 }}
+          >
             <FiAlertCircle /> {error}
-          </p>
+          </motion.p>
         )}
         {message && (
-          <p className={`settings-message ${messageType === 'error' ? 'error' : ''}`}>
+          <motion.p
+            className={`settings-message ${messageType === 'error' ? 'error' : ''}`}
+            role="status"
+            initial={reduceMotion ? false : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.22 }}
+          >
             <FiCheckCircle /> {message}
-          </p>
+          </motion.p>
         )}
 
         {isLoading ? (
-          <div className="settings-loading">Loading profile...</div>
+          <motion.div
+            className="settings-loading"
+            role="status"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <span className="settings-loading-mark" aria-hidden="true" />
+            Loading profile...
+          </motion.div>
         ) : (
-          <div className="settings-grid">
+          <motion.div
+            className="settings-grid"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: reduceMotion ? 0 : 0.075 } },
+            }}
+          >
             {/* Profile Information Card */}
-            <section className="settings-card">
+            <motion.section className="settings-card" variants={cardVariants}>
               <div className="settings-card-heading">
                 <FiUser />
                 <div>
@@ -347,10 +389,10 @@ export default function SettingsPage() {
                   {busy ? 'Saving...' : 'Save changes'}
                 </button>
               </form>
-            </section>
+            </motion.section>
 
             {/* Change Password Card */}
-            <section className="settings-card">
+            <motion.section className="settings-card" variants={cardVariants}>
               <div className="settings-card-heading">
                 <FiLock />
                 <div>
@@ -412,10 +454,10 @@ export default function SettingsPage() {
                   {busy ? 'Updating...' : 'Update password'}
                 </button>
               </form>
-            </section>
+            </motion.section>
 
             {/* Phone Verification Card */}
-            <section className="settings-card">
+            <motion.section className="settings-card" variants={cardVariants}>
               <div className="settings-card-heading">
                 <FiPhone />
                 <div>
@@ -453,12 +495,9 @@ export default function SettingsPage() {
                   </button>
                 </form>
               )}
-            </section>
+            </motion.section>
 
-            
-
-
-          </div>
+          </motion.div>
         )}
       </main>
     </Layout>
