@@ -35,7 +35,6 @@ import SendInquiryModal from "../components/deals/SendInquiryModal";
 import MakeOfferModal from "../components/deals/MakeOfferModal";
 
 import { getUserId } from "../lib/inquiryUtils";
-import RentalTerms from "../components/RentalTerms";
 
 export default function BikeDetailsPage() {
   const { id } = useParams();
@@ -611,6 +610,34 @@ export default function BikeDetailsPage() {
 
             <div className="details-actions">
 
+              {/* Transaction action buttons — UI only, no workflow attached yet. */}
+              {bike.isForSale !== false && (
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#092532] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#143b49] focus:outline-none focus:ring-2 focus:ring-[#89C9B8] focus:ring-offset-2"
+                >
+                  BUY NOW
+                </button>
+              )}
+
+              {bike.isForRent && (
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#89C9B8] px-5 py-3 text-sm font-semibold text-[#092532] shadow-sm transition hover:bg-[#a3d8ca] focus:outline-none focus:ring-2 focus:ring-[#092532] focus:ring-offset-2"
+                >
+                  RENT NOW
+                </button>
+              )}
+
+              {bike.isForTrade && (
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#092532] bg-white px-5 py-3 text-sm font-semibold text-[#092532] shadow-sm transition hover:bg-[#F0F5EF] focus:outline-none focus:ring-2 focus:ring-[#89C9B8] focus:ring-offset-2"
+                >
+                  TRADE NOW
+                </button>
+              )}
+
               {/* CONTACT SELLER */}
 
               <a
@@ -1041,7 +1068,12 @@ export default function BikeDetailsPage() {
 
               {bike.rentalDetails
                 .terms && (
-                <RentalTerms terms={bike.rentalDetails.terms} />
+                <p className="details-notes">
+                  {
+                    bike.rentalDetails
+                      .terms
+                  }
+                </p>
               )}
 
             </section>
