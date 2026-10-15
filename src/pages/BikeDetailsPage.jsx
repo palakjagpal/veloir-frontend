@@ -627,7 +627,7 @@ export default function BikeDetailsPage() {
                 {bike.isForRent && (
                   <button
                     type="button"
-                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#89C9B8] px-5 py-3 text-sm font-extrabold tracking-wide text-[#092532] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#a3d8ca] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#092532] focus-visible:ring-offset-2 active:translate-y-0"
+                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#143b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
                   >
                     <FiCalendar aria-hidden="true" className="h-[18px] w-[18px]" />
                     <span>RENT NOW</span>
@@ -637,7 +637,7 @@ export default function BikeDetailsPage() {
                 {bike.isForTrade && (
                   <button
                     type="button"
-                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#C7E2B2] px-5 py-3 text-sm font-extrabold tracking-wide text-[#092532] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#d7edc8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
+                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#143b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
                   >
                     <FiRepeat aria-hidden="true" className="h-[18px] w-[18px]" />
                     <span>TRADE NOW</span>
