@@ -268,21 +268,6 @@ export default function BikeActionOtpModal({
         >
           {/* Header */}
           <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div
-                className="
-                  flex h-10 w-10 shrink-0
-                  items-center justify-center
-                  rounded-xl bg-[#eaf4ef]
-                  text-[#092532]
-                "
-              >
-                <FiShield size={21} />
-              </div>
-
-              
-            </div>
-
             <button
               type="button"
               onClick={onClose}
