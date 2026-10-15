@@ -18,7 +18,7 @@ import {
   FiTrash2,
   FiX,
 } from "react-icons/fi";
-import { api } from "../lib/api";
+import { api, clearAuthToken, getAuthToken } from "../lib/api";
 import "leaflet/dist/leaflet.css";
 import "./AddressManagement.css";
 
@@ -41,7 +41,7 @@ const DEFAULT_CENTER = [22.9734, 78.6569];
 function handleExpiredSession(error) {
   const unauthorized = error?.status === 401 || /not authorized|token failed|token expired/i.test(error?.message || "");
   if (unauthorized) {
-    localStorage.removeItem("veloir_token");
+    clearAuthToken();
     window.location.assign("/login?sessionExpired=1");
     return true;
   }
@@ -150,7 +150,8 @@ function LocationSuggestions({ items, onChoose, busy }) {
   );
 }
 
-export default function AddressManagement() {
+export default function AddressManagement({ mode = "account", onUseAddress }) {
+  const listingMode = mode === "listing";
   const [addresses, setAddresses] = useState([]);
   const [listLoading, setListLoading] = useState(true);
   const [listError, setListError] = useState("");
@@ -182,6 +183,14 @@ export default function AddressManagement() {
   const loadAddresses = useCallback(async () => {
     setListLoading(true);
     setListError("");
+    // Do not issue a protected request without a discoverable access token.
+    // This avoids noisy 401s and never makes the address route public.
+    if (!getAuthToken()) {
+      setListError("Your sign-in session is missing. Please sign in again to manage saved addresses.");
+      setListLoading(false);
+      window.location.assign("/login?sessionExpired=1");
+      return;
+    }
     try {
       const response = await api("/api/addresses");
       setAddresses(response.data || response.addresses || []);
@@ -313,18 +322,21 @@ export default function AddressManagement() {
 
   const applyLocation = (rawLocation) => {
     const location = normalizeLocation(rawLocation);
+    // A newly selected search/map location replaces the previous place. Do not
+    // carry old locality, PIN or coordinates into a different address when the
+    // provider omits one of those fields.
     setForm((prev) => ({
       ...prev,
-      fullAddress: location.fullAddress || location.label || prev.fullAddress,
-      city: location.city || prev.city,
-      state: location.state || prev.state,
-      postalCode: location.postalCode || prev.postalCode,
-      country: location.country || prev.country,
-      countryCode: location.countryCode || prev.countryCode || "IN",
-      latitude: location.latitude ?? prev.latitude,
-      longitude: location.longitude ?? prev.longitude,
-      formattedAddress: location.formattedAddress || location.label || prev.formattedAddress,
-      placeId: location.placeId || prev.placeId,
+      fullAddress: location.fullAddress || location.label || "",
+      city: location.city || "",
+      state: location.state || "",
+      postalCode: location.postalCode || "",
+      country: location.country || "India",
+      countryCode: location.countryCode || "IN",
+      latitude: location.latitude ?? null,
+      longitude: location.longitude ?? null,
+      formattedAddress: location.formattedAddress || location.label || location.fullAddress || "",
+      placeId: location.placeId || location.id || "",
     }));
     setFieldErrors({});
     setSelectedPoint(
@@ -335,7 +347,7 @@ export default function AddressManagement() {
     if (Number.isFinite(location.latitude) && Number.isFinite(location.longitude)) {
       setMapCenter([location.latitude, location.longitude]);
     }
-    setSearchQuery(location.label || "");
+    setSearchQuery(location.label || location.formattedAddress || location.fullAddress || "");
     setSearchResults([]);
     setShowSearchResults(false);
     setFieldLookup(null);
@@ -398,8 +410,23 @@ export default function AddressManagement() {
       if (handleExpiredSession(error)) return;
       setSelectedPoint({ latitude, longitude });
       setMapCenter([latitude, longitude]);
-      setForm((prev) => ({ ...prev, latitude, longitude }));
-      setMapMessage(error.message || "We could not convert this position to an address. Enter the address manually.");
+      // Keep the picked coordinates but clear the previous address to avoid
+      // submitting one address paired with a different map/current-location pin.
+      setForm((prev) => ({
+        ...prev,
+        fullAddress: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        formattedAddress: "",
+        placeId: "",
+        latitude,
+        longitude,
+      }));
+      setSearchQuery("");
+      setSearchResults([]);
+      setFieldErrors({});
+      setMapMessage(error.message || "We could not convert this position to an address. Coordinates were retained; enter the address details manually.");
     } finally {
       setReverseLoading(false);
     }
@@ -446,8 +473,33 @@ export default function AddressManagement() {
     return Object.keys(errors).length === 0;
   };
 
+  const applyAddressToListing = (address) => {
+    if (!listingMode || typeof onUseAddress !== "function" || !address) return;
+    onUseAddress({
+      ...address,
+      fullAddress: address.fullAddress || address.formattedAddress || address.label || "",
+      formattedAddress: address.formattedAddress || address.label || address.fullAddress || "",
+      city: address.city || "",
+      state: address.state || "",
+      postalCode: address.postalCode || address.pincode || "",
+      country: address.country || "India",
+      countryCode: address.countryCode || "IN",
+      latitude: address.latitude ?? null,
+      longitude: address.longitude ?? null,
+      placeId: address.placeId || address.id || "",
+    });
+  };
+
+  const useCurrentFormLocation = () => {
+    if (!validate()) return;
+    applyAddressToListing(form);
+    setNotice({ type: "success", text: "Location selected for this bike listing. You can continue or save it to your address book." });
+    setFormOpen(false);
+    setEditingId(null);
+  };
+
   const saveAddress = async (event) => {
-    event.preventDefault();
+    event?.preventDefault?.();
     setNotice({ type: "", text: "" });
     if (!validate()) return;
     setSaving(true);
@@ -479,7 +531,10 @@ export default function AddressManagement() {
           return next.sort((a, b) => Number(Boolean(b.isDefault)) - Number(Boolean(a.isDefault)) || new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
         });
       }
-      setNotice({ type: "success", text: response.message || (editingId ? "Address updated successfully." : "Address saved successfully.") });
+      if (listingMode && saved) applyAddressToListing(saved);
+      setNotice({ type: "success", text: listingMode
+        ? `${response.message || (editingId ? "Address updated successfully." : "Address saved successfully.")} Selected for this listing.`
+        : response.message || (editingId ? "Address updated successfully." : "Address saved successfully.") });
       setFormOpen(false);
       setEditingId(null);
     } catch (error) {
@@ -520,13 +575,16 @@ export default function AddressManagement() {
     setFieldLookup(value.trim().length >= 3 ? { field, query: value } : null);
   };
 
+  const FormContainer = listingMode ? "div" : "form";
+  const formContainerProps = listingMode ? {} : { onSubmit: saveAddress, noValidate: true };
+
   return (
-    <section className="settings-card address-management-card" aria-labelledby="address-management-title">
+    <section className={`settings-card address-management-card${listingMode ? " address-management-inline" : ""}`} aria-labelledby={listingMode ? "listing-address-management-title" : "address-management-title"}>
       <div className="settings-card-heading">
         <FiMapPin aria-hidden="true" />
         <div>
-          <h2 id="address-management-title">Saved addresses</h2>
-          <p>Keep your delivery and contact locations up to date.</p>
+          <h2 id={listingMode ? "listing-address-management-title" : "address-management-title"}>Saved addresses</h2>
+          <p>{listingMode ? "Choose a saved location or add/edit one here. Your Account page address book remains available as before." : "Keep your delivery and contact locations up to date."}</p>
         </div>
       </div>
 
@@ -541,7 +599,7 @@ export default function AddressManagement() {
 
       {!formOpen && (
         <div className="address-list-toolbar">
-          <p className="address-supporting-copy">Addresses are private to your account. You can edit or remove them at any time.</p>
+          <p className="address-supporting-copy">{listingMode ? "Select an address for this bike listing, or add/edit an address without leaving this form." : "Addresses are private to your account. You can edit or remove them at any time."}</p>
           <button type="button" className="address-primary-button" onClick={openNewForm}>
             <FiPlus aria-hidden="true" /> Add address
           </button>
@@ -576,10 +634,11 @@ export default function AddressManagement() {
                 )}
               </div>
               <div className="saved-address-actions">
+                {listingMode && <button type="button" className="address-use-button" onClick={() => applyAddressToListing(address)} aria-label={`Use address in ${address.city} for this bike listing`}>Use for listing</button>}
                 <button type="button" onClick={() => openEditForm(address)} aria-label={`Edit address in ${address.city}`}><FiEdit2 /> Edit</button>
-                <button type="button" className="address-delete-button" onClick={() => deleteAddress(address)} disabled={deletingId !== null} aria-label={`Delete address in ${address.city}`}>
+                {!listingMode && <button type="button" className="address-delete-button" onClick={() => deleteAddress(address)} disabled={deletingId !== null} aria-label={`Delete address in ${address.city}`}>
                   {deletingId === address._id ? <span className="address-spinner small" /> : <FiTrash2 />} {deletingId === address._id ? "Deleting…" : "Delete"}
-                </button>
+                </button>}
               </div>
             </article>
           ))}
@@ -587,7 +646,7 @@ export default function AddressManagement() {
       )}
 
       {formOpen && (
-        <form className="address-form" onSubmit={saveAddress} noValidate>
+        <FormContainer className="address-form" {...formContainerProps}>
           <div className="address-form-heading">
             <div>
               <h3>{editingId ? "Edit address" : "Add a new address"}</h3>
@@ -720,21 +779,22 @@ export default function AddressManagement() {
             </label>
           </div>
 
-          <label className="address-default-checkbox">
+          {!listingMode && <label className="address-default-checkbox">
             <input type="checkbox" checked={Boolean(form.isDefault)} onChange={(event) => updateField("isDefault", event.target.checked)} />
             <span>Make this my default address</span>
-          </label>
+          </label>}
 
           <div className="address-form-footer">
             <p>Map and search data are approximate. Review the complete address before saving.</p>
             <div>
               <button type="button" className="address-cancel-button" onClick={closeForm} disabled={saving || geoLoading || reverseLoading}>Cancel</button>
-              <button type="submit" className="address-primary-button" disabled={saving || listLoading}>
+              {listingMode && <button type="button" className="address-secondary-button" onClick={useCurrentFormLocation} disabled={saving || geoLoading || reverseLoading || listLoading}>Use this location for listing</button>}
+              <button type={listingMode ? "button" : "submit"} className="address-primary-button" disabled={saving || listLoading} onClick={listingMode ? saveAddress : undefined}>
                 {saving ? <><span className="address-spinner small" /> Saving…</> : <><FiCheckCircle /> {editingId ? "Save address" : "Add address"}</>}
               </button>
             </div>
           </div>
-        </form>
+        </FormContainer>
       )}
       <p className="address-provider-credit">Location search: <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer">Powered by Geoapify</a> (when configured, with Photon fallback). Map tiles: OpenStreetMap contributors.</p>
     </section>

@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Logo } from "../components/Layout";
+import AddressManagement from "../components/AddressManagement";
+import { API_BASE_URL, getAuthToken } from "../lib/api";
 import "./CreateBikeListingPage.css";
 
-const configuredApi = String(import.meta.env.VITE_API_URL || "https://veloir-backend.onrender.com").replace(/\/$/, "");
+const configuredApi = String(API_BASE_URL || "https://veloir-backend.onrender.com").replace(/\/$/, "");
 const API_ORIGIN = configuredApi.endsWith("/api") ? configuredApi.slice(0, -4) : configuredApi;
 const apiUrl = (path) => `${API_ORIGIN}${path.startsWith("/api") ? path : `/api${path}`}`;
 
@@ -24,23 +27,6 @@ const SECTIONS = [
   { title: "RC & licence", description: "Enter the details for confidential manual review." },
   { title: "Photos & review", description: "Add images and confirm your listing details." },
 ];
-
-function readToken() {
-  const directKeys = ["token", "authToken", "accessToken", "jwt"];
-  for (const key of directKeys) {
-    const value = localStorage.getItem(key);
-    if (value && !value.startsWith("{")) return value;
-  }
-  const objectKeys = ["userInfo", "user", "auth", "veloirUser"];
-  for (const key of objectKeys) {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(key) || "null");
-      const token = parsed?.token || parsed?.accessToken || parsed?.jwt;
-      if (token) return token;
-    } catch { /* ignore non-JSON localStorage entries */ }
-  }
-  return "";
-}
 
 function formatApiError(payload, fallback) {
   if (payload?.errors && typeof payload.errors === "object") {
@@ -84,55 +70,14 @@ export default function CreateBikeListingPage() {
   const [completedSections, setCompletedSections] = useState([]);
   const [sectionErrors, setSectionErrors] = useState({});
   const [images, setImages] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
-  const [searchingLocation, setSearchingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
-  const [savedAddresses, setSavedAddresses] = useState([]);
-  const [selectedSavedAddressId, setSelectedSavedAddressId] = useState("");
-  const [loadingSavedAddresses, setLoadingSavedAddresses] = useState(false);
-  const [locatingUser, setLocatingUser] = useState(false);
-  const [savingAddress, setSavingAddress] = useState(false);
-  const [addressManagerMessage, setAddressManagerMessage] = useState("");
-  const [addressManagerError, setAddressManagerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submission, setSubmission] = useState(null);
   const [documentConsent, setDocumentConsent] = useState(false);
   const previewUrls = useRef([]);
-  const searchRequest = useRef(0);
 
   useEffect(() => () => previewUrls.current.forEach((url) => URL.revokeObjectURL(url)), []);
-
-  // Reuse the Account page's authenticated address book API. Failure to load saved
-  // addresses does not disable autocomplete, manual entry, or browser geolocation.
-  useEffect(() => {
-    let cancelled = false;
-    const loadSavedAddresses = async () => {
-      const token = readToken();
-      if (!token) return;
-      setLoadingSavedAddresses(true);
-      try {
-        const response = await fetch(apiUrl("/api/addresses"), {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(formatApiError(payload, "Saved addresses could not be loaded."));
-        if (!cancelled) {
-          const addresses = Array.isArray(payload.data) ? payload.data : [];
-          setSavedAddresses(addresses);
-        }
-      } catch (error) {
-        if (!cancelled) setAddressManagerError(error.message || "Saved addresses could not be loaded.");
-      } finally {
-        if (!cancelled) setLoadingSavedAddresses(false);
-      }
-    };
-    loadSavedAddresses();
-    return () => { cancelled = true; };
-    // The saved-address book loads once; intentionally do not reset form state on refresh.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const update = (field, value) => {
     const sectionIndex = ["title", "description", "brand", "model", "year", "price", "category", "condition", "mileage", "engineCapacity", "color"].includes(field) ? 0 : 1;
@@ -145,252 +90,26 @@ export default function CreateBikeListingPage() {
     setForm((prev) => ({ ...prev, [group]: { ...prev[group], [field]: value } }));
   };
 
-  const lookupLocation = async (query) => {
-    if (query.trim().length < 3) {
-      setSuggestions([]);
-      setLocationMessage(query.trim() ? "Enter at least 3 characters to search." : "");
-      return;
-    }
-    const requestId = ++searchRequest.current;
-    setSearchingLocation(true);
-    setLocationMessage("");
-    try {
-      const token = readToken();
-      const response = await fetch(apiUrl(`/api/addresses/search?q=${encodeURIComponent(query.trim())}`), {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        cache: "no-store",
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (requestId !== searchRequest.current) return;
-      if (!response.ok) throw new Error(formatApiError(payload, "Location search is unavailable. You can enter the address manually."));
-      setSuggestions(Array.isArray(payload.results) ? payload.results : []);
-      if (!payload.results?.length) setLocationMessage("No matches found. Continue with manual address entry.");
-    } catch (error) {
-      if (requestId === searchRequest.current) {
-        setSuggestions([]);
-        setLocationMessage(error.message || "Location search is unavailable. You can enter the address manually.");
-      }
-    } finally {
-      if (requestId === searchRequest.current) setSearchingLocation(false);
-    }
-  };
-
-  useEffect(() => {
-    const query = form.location.fullAddress;
-    if (query.trim().length < 3 || form.location.placeId) return undefined;
-    const handle = setTimeout(() => lookupLocation(query), 320);
-    return () => clearTimeout(handle);
-    // lookupLocation is intentionally represented by the stable query fields.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.location.fullAddress, form.location.placeId]);
-
-  const chooseLocation = (place) => {
-    setForm((prev) => ({
-      ...prev,
+  const handleUseAddress = (address) => {
+    setForm((previous) => ({
+      ...previous,
       location: {
-        ...prev.location,
-        fullAddress: place.fullAddress || place.label || "",
-        formattedAddress: place.formattedAddress || place.label || "",
-        city: place.city || prev.location.city,
-        state: place.state || prev.location.state,
-        country: place.country || prev.location.country,
-        countryCode: place.countryCode || prev.location.countryCode,
-        postalCode: place.postalCode !== undefined && place.postalCode !== null ? place.postalCode : prev.location.postalCode,
-        latitude: place.latitude ?? null,
-        longitude: place.longitude ?? null,
-        placeId: place.placeId || place.id || "",
+        ...previous.location,
+        fullAddress: address.fullAddress || address.formattedAddress || address.label || "",
+        formattedAddress: address.formattedAddress || address.label || address.fullAddress || "",
+        city: address.city || "",
+        state: address.state || "",
+        country: address.country || "India",
+        countryCode: address.countryCode || "IN",
+        postalCode: address.postalCode || address.pincode || "",
+        latitude: address.latitude ?? null,
+        longitude: address.longitude ?? null,
+        placeId: address.placeId || address.id || "",
       },
     }));
-    setSelectedSavedAddressId(place._id ? String(place._id) : "");
-    setSuggestions([]);
-    setCompletedSections((prev) => prev.filter((section) => section < 2));
-    setSectionErrors((prev) => ({ ...prev, 2: "" }));
-    setLocationMessage("Location selected. Confirm the address, city, state and postal code before continuing.");
-    setAddressManagerError("");
-    setAddressManagerMessage("");
-  };
-
-  const selectSavedAddress = (addressId) => {
-    setSelectedSavedAddressId(addressId);
-    const address = savedAddresses.find((item) => String(item._id) === String(addressId));
-    if (address) chooseLocation(address);
-  };
-
-  const addressPayload = (isDefault = false) => ({
-    fullAddress: form.location.fullAddress.trim(),
-    city: form.location.city.trim(),
-    state: form.location.state.trim(),
-    postalCode: form.location.postalCode.trim(),
-    country: form.location.country.trim(),
-    countryCode: (form.location.countryCode || "IN").trim().toUpperCase(),
-    latitude: form.location.latitude === "" ? null : form.location.latitude,
-    longitude: form.location.longitude === "" ? null : form.location.longitude,
-    formattedAddress: form.location.formattedAddress || form.location.fullAddress.trim(),
-    placeId: form.location.placeId || "",
-    isDefault,
-  });
-
-  const validateAddressForSave = () => {
-    const location = form.location;
-    if (location.fullAddress.trim().length < 4) return "Enter a full address with at least 4 characters.";
-    if (!location.city.trim()) return "City is required to save an address.";
-    if (!location.state.trim()) return "State or region is required to save an address.";
-    if (!location.country.trim()) return "Country is required to save an address.";
-    if (!location.postalCode.trim()) return "Postal / PIN code is required to save an address.";
-    return "";
-  };
-
-  const refreshSavedAddresses = async (preferredId = "") => {
-    const token = readToken();
-    if (!token) throw new Error("Your session has expired. Please sign in again.");
-    const response = await fetch(apiUrl("/api/addresses"), {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(formatApiError(payload, "Saved addresses could not be refreshed."));
-    const addresses = Array.isArray(payload.data) ? payload.data : [];
-    setSavedAddresses(addresses);
-    if (preferredId) setSelectedSavedAddressId(String(preferredId));
-    return addresses;
-  };
-
-  const saveAddressToBook = async ({ updateSelected = false, makeDefault = false } = {}) => {
-    const validationMessage = validateAddressForSave();
-    if (validationMessage) {
-      setAddressManagerError(validationMessage);
-      setAddressManagerMessage("");
-      return;
-    }
-    const token = readToken();
-    if (!token) {
-      setAddressManagerError("Your sign-in session could not be found. Please sign in again.");
-      return;
-    }
-    if (updateSelected && !selectedSavedAddressId) {
-      setAddressManagerError("Select one of your saved addresses before updating it.");
-      return;
-    }
-    setSavingAddress(true);
-    setAddressManagerError("");
-    setAddressManagerMessage("");
-    try {
-      const selected = savedAddresses.find((item) => String(item._id) === String(selectedSavedAddressId));
-      const isDefault = updateSelected ? (makeDefault || Boolean(selected?.isDefault)) : Boolean(makeDefault);
-      const body = addressPayload(isDefault);
-      const endpoint = updateSelected
-        ? apiUrl(`/api/addresses/${encodeURIComponent(selectedSavedAddressId)}`)
-        : apiUrl("/api/addresses");
-      const response = await fetch(endpoint, {
-        method: updateSelected ? "PUT" : "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        cache: "no-store",
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(formatApiError(payload, "Unable to save this address."));
-      const saved = payload.data;
-      await refreshSavedAddresses(saved?._id || selectedSavedAddressId);
-      if (saved) {
-        chooseLocation(saved);
-        setSelectedSavedAddressId(String(saved._id || ""));
-      }
-      setAddressManagerMessage(makeDefault ? "Address saved and set as your default." : updateSelected ? "Saved address updated successfully." : "Location saved to your address book.");
-    } catch (error) {
-      setAddressManagerError(error.message || "Unable to save this address.");
-    } finally {
-      setSavingAddress(false);
-    }
-  };
-
-  const deleteSelectedAddress = async () => {
-    if (!selectedSavedAddressId) return;
-    if (!window.confirm("Delete this saved address from your address book? This will not remove the location from this bike listing.")) return;
-    const token = readToken();
-    if (!token) {
-      setAddressManagerError("Your sign-in session could not be found. Please sign in again.");
-      return;
-    }
-    setSavingAddress(true);
-    setAddressManagerError("");
-    setAddressManagerMessage("");
-    try {
-      const response = await fetch(apiUrl(`/api/addresses/${encodeURIComponent(selectedSavedAddressId)}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(formatApiError(payload, "Unable to delete this saved address."));
-      const addresses = payload.data?.addresses;
-      if (Array.isArray(addresses)) setSavedAddresses(addresses);
-      else await refreshSavedAddresses();
-      setSelectedSavedAddressId("");
-      setAddressManagerMessage("Saved address deleted. Your current listing location has been kept.");
-    } catch (error) {
-      setAddressManagerError(error.message || "Unable to delete this saved address.");
-    } finally {
-      setSavingAddress(false);
-    }
-  };
-
-  const useCurrentLocation = () => {
-    setAddressManagerError("");
-    setAddressManagerMessage("");
-    setLocationMessage("");
-    setSuggestions([]);
-    if (!navigator.geolocation) {
-      setAddressManagerError("This browser does not support current-location detection. Search for an address or enter it manually.");
-      return;
-    }
-    if (typeof window !== "undefined" && !window.isSecureContext) {
-      setAddressManagerError("Current-location detection requires HTTPS (or localhost). Open Veloir using its secure URL, or enter the address manually.");
-      return;
-    }
-    setLocatingUser(true);
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      const token = readToken();
-      if (!token) {
-        setLocatingUser(false);
-        setAddressManagerError("Your sign-in session could not be found. Please sign in again.");
-        return;
-      }
-      try {
-        const response = await fetch(apiUrl(`/api/addresses/reverse?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`), {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          setForm((prev) => ({ ...prev, location: { ...prev.location, fullAddress: "", city: "", state: "", postalCode: "", latitude, longitude, placeId: "", formattedAddress: "" } }));
-          setSelectedSavedAddressId("");
-          throw new Error(formatApiError(payload, "We found your coordinates, but couldn't resolve the address. Enter the address details manually."));
-        }
-        const resolved = payload.result || payload.data?.result;
-        if (!resolved) {
-          setForm((prev) => ({ ...prev, location: { ...prev.location, fullAddress: "", city: "", state: "", postalCode: "", latitude, longitude, placeId: "", formattedAddress: "" } }));
-          setSelectedSavedAddressId("");
-          throw new Error("We found your coordinates, but no matching address was returned. Enter the address details manually.");
-        }
-        chooseLocation({ ...resolved, latitude, longitude });
-        setLocationMessage("Current location detected and matched to an address. Confirm the details before continuing.");
-        setAddressManagerMessage("Current location detected successfully.");
-      } catch (error) {
-        setAddressManagerError(error.message || "Unable to resolve your current location. Please search or enter it manually.");
-      } finally {
-        setLocatingUser(false);
-      }
-    }, (error) => {
-      const messages = {
-        1: "Location permission was denied. Allow location access in your browser settings, or search for an address manually.",
-        2: "Your current location is unavailable. Check device location services or search for an address manually.",
-        3: "Location detection timed out. Try again or search for an address manually.",
-      };
-      setAddressManagerError(messages[error.code] || "Unable to detect your location. Search for an address or enter it manually.");
-      setLocatingUser(false);
-    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+    setCompletedSections((previous) => previous.filter((section) => section < 2));
+    setSectionErrors((previous) => ({ ...previous, 2: "" }));
+    setLocationMessage("Address selected. Confirm the details in the listing summary before submitting.");
   };
 
   const validateSection = (sectionIndex) => {
@@ -505,7 +224,7 @@ export default function CreateBikeListingPage() {
         return;
       }
     }
-    const token = readToken();
+    const token = getAuthToken();
     if (!token) {
       setSubmitError("Your sign-in session could not be found. Please sign in again and retry.");
       return;
@@ -601,6 +320,7 @@ export default function CreateBikeListingPage() {
   if (submission) {
     return (
       <main className="cbl-page">
+        <div className="cbl-brand-bar"><Logo /></div>
         <section className="cbl-success" aria-live="polite">
           <div className="cbl-success-mark">✓</div>
           <p className="cbl-kicker">Listing submitted</p>
@@ -623,6 +343,7 @@ export default function CreateBikeListingPage() {
 
   return (
     <main className="cbl-page">
+      <div className="cbl-brand-bar"><Logo /></div>
       <div className="cbl-heading">
         <div>
           <p className="cbl-kicker">Sell, rent or trade</p>
@@ -707,35 +428,12 @@ export default function CreateBikeListingPage() {
             </div> : null}
 
             {index === 2 ? <div className="cbl-stack">
-              <section className="cbl-address-book" aria-label="Saved address management">
-                <div className="cbl-address-book-heading"><div><h3>Saved addresses</h3><p>Choose a saved address, or manage it here without leaving your listing.</p></div><span className="cbl-address-book-count">{savedAddresses.length} saved</span></div>
-                <div className="cbl-address-book-controls">
-                  <label className="cbl-field"><span>Select a saved address</span><select value={selectedSavedAddressId} onChange={(event) => selectSavedAddress(event.target.value)} disabled={loadingSavedAddresses || !savedAddresses.length}><option value="">{loadingSavedAddresses ? "Loading saved addresses…" : savedAddresses.length ? "Choose a saved address" : "No saved addresses yet"}</option>{savedAddresses.map((address) => <option key={address._id} value={address._id}>{address.isDefault ? "★ Default — " : ""}{[address.fullAddress, address.city, address.state].filter(Boolean).join(", ")}</option>)}</select></label>
-                  <button type="button" className="cbl-secondary-btn cbl-locate-btn" onClick={useCurrentLocation} disabled={locatingUser}><span aria-hidden="true">{locatingUser ? "◌" : "⌖"}</span>{locatingUser ? "Detecting location…" : "Use current location"}</button>
-                </div>
-                {loadingSavedAddresses ? <p className="cbl-muted" role="status">Loading your saved addresses…</p> : null}
-                <div className="cbl-address-book-actions">
-                  <button type="button" className="cbl-secondary-btn" onClick={() => saveAddressToBook()} disabled={savingAddress || locatingUser}>{savingAddress ? "Saving…" : "Save as new address"}</button>
-                  <button type="button" className="cbl-secondary-btn" onClick={() => saveAddressToBook({ updateSelected: true })} disabled={savingAddress || locatingUser || !selectedSavedAddressId}>Update selected</button>
-                  <button type="button" className="cbl-secondary-btn" onClick={() => saveAddressToBook({ updateSelected: true, makeDefault: true })} disabled={savingAddress || locatingUser || !selectedSavedAddressId}>Set as default</button>
-                  <button type="button" className="cbl-secondary-btn cbl-delete-address-btn" onClick={deleteSelectedAddress} disabled={savingAddress || locatingUser || !selectedSavedAddressId}>Delete selected</button>
-                </div>
-                {addressManagerError ? <p className="cbl-address-message is-error" role="alert">{addressManagerError}</p> : null}
-                {addressManagerMessage ? <p className="cbl-address-message is-success" role="status">{addressManagerMessage}</p> : null}
-              </section>
-
-              <div className="cbl-location-search"><label className="cbl-field"><span>Search address or place <b>*</b></span><input value={form.location.fullAddress} onChange={(e) => { const value = e.target.value; setForm((prev) => ({ ...prev, location: { ...prev.location, fullAddress: value, formattedAddress: "", placeId: "", latitude: null, longitude: null, city: "", state: "", postalCode: "" } })); setCompletedSections((prev) => prev.filter((section) => section < 2)); setSelectedSavedAddressId(""); setSuggestions([]); setAddressManagerMessage(""); }} placeholder="Start typing street, area, city or PIN code" autoComplete="off" aria-autocomplete="list" aria-expanded={suggestions.length > 0} aria-controls="cbl-address-suggestions" /></label>
-                {searchingLocation ? <p className="cbl-muted" role="status">Searching addresses…</p> : null}
-                {suggestions.length ? <div className="cbl-suggestions" id="cbl-address-suggestions" role="listbox">{suggestions.map((place) => <button type="button" key={place.id || place.placeId || place.label} role="option" aria-selected="false" onClick={() => chooseLocation(place)}><strong>{place.label}</strong><small>{[place.city, place.state, place.postalCode, place.country].filter(Boolean).join(", ")}</small></button>)}</div> : null}
-                {locationMessage ? <p className="cbl-muted" role="status">{locationMessage}</p> : null}
+              <AddressManagement mode="listing" onUseAddress={handleUseAddress} />
+              {locationMessage ? <p className="cbl-location-selected-message" role="status">{locationMessage}</p> : null}
+              <div className="cbl-location-summary">
+                <div><span className="cbl-location-summary-icon" aria-hidden="true">✓</span><div><strong>{form.location.fullAddress || form.location.formattedAddress || "No listing location selected yet"}</strong><small>{[form.location.city, form.location.state, form.location.postalCode, form.location.country].filter(Boolean).join(", ") || "Add, search for, or choose a location above."}</small></div></div>
+                {form.location.latitude != null && form.location.longitude != null ? <small className="cbl-location-coordinates">Coordinates: {Number(form.location.latitude).toFixed(6)}, {Number(form.location.longitude).toFixed(6)}</small> : <small className="cbl-location-coordinates">Coordinates will be saved when a search result, saved address or map point with coordinates is selected.</small>}
               </div>
-              <div className="cbl-grid">
-                <label className="cbl-field"><span>City <b>*</b></span><input value={form.location.city} onChange={(e) => updateNested("location", "city", e.target.value)} autoComplete="address-level2" /></label>
-                <label className="cbl-field"><span>State / region <b>*</b></span><input value={form.location.state} onChange={(e) => updateNested("location", "state", e.target.value)} autoComplete="address-level1" /></label>
-                <label className="cbl-field"><span>Country <b>*</b></span><input value={form.location.country} onChange={(e) => updateNested("location", "country", e.target.value)} autoComplete="country-name" /></label>
-                <label className="cbl-field"><span>Postal / PIN code <b>*</b></span><input value={form.location.postalCode} onChange={(e) => updateNested("location", "postalCode", e.target.value)} maxLength={12} autoComplete="postal-code" /></label>
-              </div>
-              {form.location.latitude != null && form.location.longitude != null ? <div className="cbl-coordinate-panel"><span aria-hidden="true">✓</span><div><strong>Coordinates captured</strong><small>{Number(form.location.latitude).toFixed(6)}, {Number(form.location.longitude).toFixed(6)}</small></div><button type="button" onClick={() => { updateNested("location", "latitude", null); updateNested("location", "longitude", null); setLocationMessage("Coordinates cleared. Search and select a place or use current location to add them again."); }}>Clear</button></div> : <p className="cbl-muted">Coordinates are added when you select an autocomplete result or detect your current location.</p>}
               <div className="cbl-privacy-note"><strong>Location privacy</strong><span>The selected address and coordinates are saved with this bike listing and may be displayed to marketplace users. Use an appropriate pickup or inspection location; avoid entering private access instructions.</span></div>
             </div> : null}
 

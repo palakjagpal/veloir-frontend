@@ -1,103 +1,91 @@
-// frontend/src/context/AuthContext.jsx
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { api } from '../lib/api'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { api, clearAuthToken, getAuthToken, storeAuthToken } from "../lib/api";
 
-const AuthContext = createContext(null)
-
-export const useAuth = () => useContext(AuthContext)
+const AuthContext = createContext(null);
+export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [oauthNotice, setOauthNotice] = useState(null)
-  // True while a fresh login is being hydrated from /users/me (login/2FA responses omit `role`)
-  const [hydrating, setHydrating] = useState(false)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [hydrating, setHydrating] = useState(false);
+  const [oauthNotice, setOauthNotice] = useState(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const oauthToken = params.get('token')
-
+    const params = new URLSearchParams(window.location.search);
+    const oauthToken = params.get("token");
     if (oauthToken) {
-      setOauthNotice({
-        isNew: params.get('isNew') === 'true',
-        notice: params.get('notice'),
-      })
-
-      localStorage.setItem('veloir_token', oauthToken)
-      params.delete('token')
-      params.delete('isNew')
-      const cleanQuery = params.toString()
-      window.history.replaceState({}, '', window.location.pathname + (cleanQuery ? `?${cleanQuery}` : ''))
+      // OAuth callback uses the same canonical token key as normal login.
+      storeAuthToken(oauthToken);
+      setOauthNotice({ isNew: params.get("isNew") === "true", notice: params.get("notice") });
+      params.delete("token");
+      params.delete("isNew");
+      const cleanQuery = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (cleanQuery ? `?${cleanQuery}` : ""));
     }
-    
-    const token = localStorage.getItem('veloir_token')
+
+    const token = getAuthToken();
     if (!token) {
-      setLoading(false)
-      return
+      setLoading(false);
+      return;
     }
 
-    api('/api/users/me')
+    let cancelled = false;
+    api("/api/users/me")
       .then((response) => {
-        setUser(response.data || response.user || response)
+        if (!cancelled) setUser(response.data || response.user || response);
       })
-      .catch(() => {
-        localStorage.removeItem('veloir_token')
-        setUser(null)
+      .catch((error) => {
+        // Only clear a rejected credential. Temporary API/network/server failures
+        // should not silently log out an otherwise valid client session.
+        if (error?.status === 401) {
+          clearAuthToken();
+          if (!cancelled) setUser(null);
+        }
       })
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-  const logout = async () => {
+    return () => { cancelled = true; };
+  }, []);
+
+  const login = useCallback((token, userData) => {
+    storeAuthToken(token);
+    setUser(userData || null);
+    setHydrating(true);
+    api("/api/users/me")
+      .then((response) => {
+        const fullUser = response.data || response.user || response;
+        setUser((previous) => ({ ...(previous || {}), ...(fullUser || {}) }));
+      })
+      .catch((error) => {
+        if (error?.status === 401) {
+          clearAuthToken();
+          setUser(null);
+        }
+      })
+      .finally(() => setHydrating(false));
+  }, []);
+
+  const logout = useCallback(async () => {
     try {
-      const token = localStorage.getItem('veloir_token')
-      if (token) {
-        // Call logout API to invalidate token on server
-        await api('/api/auth/logout', {
-          method: 'POST'
-        })
-      }
+      if (getAuthToken()) await api("/api/auth/logout", { method: "POST" });
     } catch (error) {
-      console.error('Logout API error:', error)
+      // Logout still clears the local session if the server is unreachable.
+      if (import.meta.env.DEV) console.warn("Logout API request failed.", error?.status || "network error");
     } finally {
-      // Always clear local storage and state
-      localStorage.removeItem('veloir_token')
-      setUser(null)
+      clearAuthToken();
+      setUser(null);
+      setHydrating(false);
     }
-  }
+  }, []);
 
-  // Login/2FA responses return a partial user (no `role`), so pull the full profile
-  const login = (token, userData) => {
-    localStorage.setItem('veloir_token', token)
-    setUser(userData)
-    setHydrating(true)
-    api('/api/users/me')
-      .then((response) => {
-        const full = response.data || response.user || response
-        setUser((prev) => ({ ...prev, ...full }))
-      })
-      .catch(() => {})
-      .finally(() => setHydrating(false))
-  }
-
-  const hasRole = (...roles) => {
-    const flat = roles.flat().filter(Boolean)
-    return !!user && (flat.length === 0 || flat.includes(user.role))
-  }
+  const hasRole = useCallback((...roles) => {
+    const expected = roles.flat().filter(Boolean);
+    return Boolean(user) && (expected.length === 0 || expected.includes(user.role));
+  }, [user]);
 
   const value = useMemo(() => ({
-    user,
-    setUser,
-    loading,
-    hydrating,
-    oauthNotice, setOauthNotice,
-    login,
-    logout,
-    hasRole
-  }), [user, loading, hydrating, oauthNotice])
+    user, setUser, loading, hydrating, oauthNotice, setOauthNotice, login, logout, hasRole,
+  }), [user, loading, hydrating, oauthNotice, login, logout, hasRole]);
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

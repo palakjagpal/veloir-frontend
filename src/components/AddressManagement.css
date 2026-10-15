@@ -100,3 +100,20 @@
   .address-form-heading h3 { font-size: 18px; }
   .address-location-actions { align-items: flex-start; flex-direction: column; }
 }
+
+
+/* Inline mode reuses this component inside Create Bike Listing without disturbing
+   the Account page's original spacing or address-management controls. */
+.address-management-inline { grid-column: auto; min-width: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.address-management-inline .settings-card-heading { margin-bottom: 20px; }
+.address-management-inline .saved-address-card { align-items: center; }
+.address-management-inline .address-form { margin-top: 8px; }
+.saved-address-actions .address-use-button { background: #092532; border-color: #092532; color: #e1ffc2; }
+.saved-address-actions .address-use-button:hover { background: #164653; color: #e1ffc2; }
+.address-management-inline .address-provider-credit { margin-top: 16px; }
+.address-management-inline .address-list-toolbar { margin-bottom: 18px; }
+.address-management-inline .address-map { height: 280px; }
+@media (max-width: 600px) {
+  .address-management-inline .address-map { height: 235px; }
+  .address-management-inline .saved-address-card { align-items: start; }
+}
