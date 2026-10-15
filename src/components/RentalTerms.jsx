@@ -81,12 +81,6 @@ export default function RentalTerms({ terms }) {
       aria-labelledby="rental-terms-title"
     >
       <div className="flex items-start gap-3 border-b border-[#e1eae2] pb-4">
-        <span
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#e3f2e8] text-[19px] text-[#23675b]"
-          aria-hidden="true"
-        >
-          <FiShield />
-        </span>
 
         <div className="min-w-0 flex-1">
           <h3
