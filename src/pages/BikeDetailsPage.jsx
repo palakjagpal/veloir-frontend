@@ -25,6 +25,8 @@ import {
   FiCheckCircle,
   FiArrowLeft,
   FiDollarSign,
+  FiShoppingCart,
+  FiRepeat,
 } from "react-icons/fi";
 
 import Layout from "../components/Layout";
@@ -610,33 +612,38 @@ export default function BikeDetailsPage() {
 
             <div className="details-actions">
 
-              {/* Transaction action buttons — UI only, no workflow attached yet. */}
-              {bike.isForSale !== false && (
-                <button
-                  type="button"
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#092532] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#143b49] focus:outline-none focus:ring-2 focus:ring-[#89C9B8] focus:ring-offset-2"
-                >
-                  BUY NOW
-                </button>
-              )}
+              {/* Transaction action buttons — visual UI only, no workflow attached yet. */}
+              <div className="mb-3 flex w-full flex-col gap-3 sm:flex-row">
+                {bike.isForSale !== false && (
+                  <button
+                    type="button"
+                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-bold tracking-wide text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#143b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
+                  >
+                    <FiShoppingCart aria-hidden="true" className="h-[18px] w-[18px]" />
+                    <span>BUY NOW</span>
+                  </button>
+                )}
 
-              {bike.isForRent && (
-                <button
-                  type="button"
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#89C9B8] px-5 py-3 text-sm font-semibold text-[#092532] shadow-sm transition hover:bg-[#a3d8ca] focus:outline-none focus:ring-2 focus:ring-[#092532] focus:ring-offset-2"
-                >
-                  RENT NOW
-                </button>
-              )}
+                {bike.isForRent && (
+                  <button
+                    type="button"
+                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#89C9B8] px-5 py-3 text-sm font-bold tracking-wide text-[#092532] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#a3d8ca] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#092532] focus-visible:ring-offset-2 active:translate-y-0"
+                  >
+                    <FiCalendar aria-hidden="true" className="h-[18px] w-[18px]" />
+                    <span>RENT NOW</span>
+                  </button>
+                )}
 
-              {bike.isForTrade && (
-                <button
-                  type="button"
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#092532] bg-white px-5 py-3 text-sm font-semibold text-[#092532] shadow-sm transition hover:bg-[#F0F5EF] focus:outline-none focus:ring-2 focus:ring-[#89C9B8] focus:ring-offset-2"
-                >
-                  TRADE NOW
-                </button>
-              )}
+                {bike.isForTrade && (
+                  <button
+                    type="button"
+                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#C7E2B2] px-5 py-3 text-sm font-bold tracking-wide text-[#092532] shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#d7edc8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
+                  >
+                    <FiRepeat aria-hidden="true" className="h-[18px] w-[18px]" />
+                    <span>TRADE NOW</span>
+                  </button>
+                )}
+              </div>
 
               {/* CONTACT SELLER */}
 
