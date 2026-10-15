@@ -16,8 +16,9 @@ import toast from "react-hot-toast";
 
 import Layout from "../components/Layout";
 import { Skeletons } from "../components/BikeCard";
+import BikePrice from "../components/BikePrice";
 import BikeActionOtpModal from "../components/BikeActionOtpModal";
-import { api, getImageUrl, formatPrice } from "../lib/api";
+import { api, getImageUrl } from "../lib/api";
 import {
   getBikeStats,
   toggleBikeAvailability,
@@ -416,9 +417,12 @@ export default function MyBikesPage() {
                     </h3>
 
                     <div className="bike-price">
-                      {formatPrice(
-                        bike.price
-                      )}
+                      <BikePrice
+                        bike={bike}
+                        className="bike-price-main"
+                        labelClassName="bike-price-label"
+                        valueClassName="bike-price-value"
+                      />
                     </div>
 
                     <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">

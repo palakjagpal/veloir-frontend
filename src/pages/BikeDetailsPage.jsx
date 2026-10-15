@@ -29,12 +29,12 @@ import {
 
 import Layout from "../components/Layout";
 import { BikeCard } from "../components/BikeCard";
+import BikePrice from "../components/BikePrice";
 
 import SendInquiryModal from "../components/deals/SendInquiryModal";
 import MakeOfferModal from "../components/deals/MakeOfferModal";
 
 import { getUserId } from "../lib/inquiryUtils";
-import RentalBookingWidget from "../components/rentals/RentalBookingWidget";
 
 export default function BikeDetailsPage() {
   const { id } = useParams();
@@ -531,62 +531,13 @@ export default function BikeDetailsPage() {
             ================================================= */}
 
             <div className="details-price">
-
-              <div className="details-price-main">
-
-                <span className="details-price-label">
-                  Price
-                </span>
-
-                <span className="details-price-value">
-                  {formatPrice(
-                    bike.price
-                  )}
-                </span>
-
-              </div>
-
-              {bike.isForRent &&
-                bike.rentalDetails
-                  ?.pricePerDay && (
-                  <div className="details-price-secondary">
-
-                    <span>
-                      Rental
-                    </span>
-
-                    <b>
-                      {formatPrice(
-                        bike
-                          .rentalDetails
-                          .pricePerDay
-                      )}
-                      /day
-                    </b>
-
-                  </div>
-                )}
-
-              {bike.isForTrade &&
-                bike.tradeDetails
-                  ?.estimatedTradeValue && (
-                  <div className="details-price-secondary">
-
-                    <span>
-                      Trade Value
-                    </span>
-
-                    <b>
-                      {formatPrice(
-                        bike
-                          .tradeDetails
-                          .estimatedTradeValue
-                      )}
-                    </b>
-
-                  </div>
-                )}
-
+              <BikePrice
+                bike={bike}
+                type={new URLSearchParams(location.search).get("type")}
+                className="details-price-main"
+                labelClassName="details-price-label"
+                valueClassName="details-price-value"
+              />
             </div>
 
             {/* =================================================
@@ -1099,11 +1050,6 @@ export default function BikeDetailsPage() {
 
             </section>
           )}
-
-        {/* =================================================
-            RENTAL BOOKING WORKFLOW — isolated component
-        ================================================= */}
-        {bike.isForRent && <RentalBookingWidget bike={bike} />}
 
         {/* =================================================
             TRADE DETAILS

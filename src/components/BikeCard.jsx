@@ -1,6 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FiMapPin, FiHeart } from "react-icons/fi";
-import { formatPrice, getImageUrl } from "../lib/api";
+import { getImageUrl } from "../lib/api";
+import BikePrice from "./BikePrice";
+import { getBikePricing } from "../lib/bikePricing";
 import { useWishlist } from "../hooks/useWishlist";
 
 
@@ -13,7 +15,11 @@ function getTransactionTypes(bike) {
   return types;
 }
 
-export function BikeCard({ bike }) {
+export function BikeCard({ bike, type }) {
+  const [searchParams] = useSearchParams();
+  const preferredType = type || searchParams.get("type") || "";
+  const pricing = getBikePricing(bike, preferredType);
+  const detailsUrl = `/bikes/${bike._id}?type=${encodeURIComponent(pricing.type)}`;
   const transactions = getTransactionTypes(bike);
   const navigate = useNavigate();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -27,7 +33,7 @@ export function BikeCard({ bike }) {
   };
 
   return (
-    <Link className="bike-card" to={`/bikes/${bike._id}`}>
+    <Link className="bike-card" to={detailsUrl}>
       <div className="bike-image">
         <img
           src={getImageUrl(bike.featuredImage || bike.images?.[0])}
@@ -76,7 +82,13 @@ export function BikeCard({ bike }) {
         </div>
 
         <div className="bike-price">
-          {formatPrice(bike.price)}
+          <BikePrice
+            bike={bike}
+            type={pricing.type}
+            className="bike-price-main"
+            labelClassName="bike-price-label"
+            valueClassName="bike-price-value"
+          />
           <small>
             <FiMapPin /> {bike.location?.city || "India"}
           </small>
