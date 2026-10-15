@@ -301,7 +301,11 @@ export default function BikeActionOtpModal({
 
           {/* Modal content */}
           <div className="mt-5 sm:mt-6">
-            <h2
+            <h2 style={{
+                  letterSpacing: "1px",
+                  wordSpacing: "2px",
+              }}
+
               id="bike-action-otp-title"
               className="
                 text-xl font-bold leading-tight text-[#092532]
