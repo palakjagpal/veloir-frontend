@@ -373,9 +373,6 @@ export default function SettingsPage() {
                 {/* Meta info */}
                 <div className="settings-meta">
                   <span>
-                    <FiShield /> Role: <b>{profile?.role || 'user'}</b>
-                  </span>
-                  <span>
                     <FiCheckCircle /> 
                     {profile?.isPhoneVerified ? 'Phone verified' : 'Phone not verified'}
                   </span>
