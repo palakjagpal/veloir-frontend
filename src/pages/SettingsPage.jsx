@@ -456,25 +456,8 @@ export default function SettingsPage() {
               )}
             </section>
 
-            {/* KYC / Document Verification Card */}
-            <section className="settings-card">
-              <div className="settings-card-heading">
-                <FiShield />
-                <div>
-                  <h2>KYC &amp; document verification</h2>
-                  <p>Verify your Driving License and vehicle RC to unlock bike listing and protected marketplace actions.</p>
-                </div>
-              </div>
+            
 
-              <Link
-                to="/kyc"
-                className="btn btn-mint inline-flex items-center justify-center gap-2"
-              >
-                Open verification <FiArrowRight />
-              </Link>
-            </section>
-
-            <AddressManagement />
 
           </div>
         )}
