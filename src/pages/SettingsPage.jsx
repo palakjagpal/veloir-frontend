@@ -497,28 +497,6 @@ export default function SettingsPage() {
               )}
             </motion.section>
 
-            {/* KYC / Document Verification Card */}
-            <motion.section className="settings-card" {...cardEntrance(0.21)}>
-              <div className="settings-card-heading">
-                <FiShield />
-                <div>
-                  <h2>KYC &amp; document verification</h2>
-                  <p>Verify your Driving License and vehicle RC to unlock bike listing and protected marketplace actions.</p>
-                </div>
-              </div>
-
-              <Link
-                to="/kyc"
-                className="btn btn-mint inline-flex items-center justify-center gap-2"
-              >
-                Open verification <FiArrowRight />
-              </Link>
-            </motion.section>
-
-            <motion.div className="settings-grid-wide" {...cardEntrance(0.28)}>
-              <AddressManagement />
-            </motion.div>
-
           </div>
         )}
       </main>
