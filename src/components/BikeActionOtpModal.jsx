@@ -280,14 +280,7 @@ export default function BikeActionOtpModal({
                 <FiShield size={21} />
               </div>
 
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                  Secure verification
-                </p>
-                <p className="text-sm font-semibold text-[#092532]">
-                  Veloir
-                </p>
-              </div>
+              
             </div>
 
             <button
