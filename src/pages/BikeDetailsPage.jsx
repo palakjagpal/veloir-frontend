@@ -612,14 +612,18 @@ export default function BikeDetailsPage() {
 
             <div className="details-actions">
 
-              {/* Transaction action buttons — visual UI only, no workflow attached yet. */}
+              {/* Transaction action buttons — visual UI only, no workflow attached yet */}
               <div className="mb-3 flex w-full flex-col gap-3 sm:flex-row">
                 {bike.isForSale !== false && (
                   <button
                     type="button"
-                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#143b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
+                    style={{ animationDelay: "0ms" }}
+                    className="group animate-[fadeInUp_0.5s_ease-out_both] inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-[#143b49] hover:shadow-lg hover:shadow-[#092532]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.97] motion-reduce:animate-none motion-reduce:transition-none"
                   >
-                    <FiShoppingCart aria-hidden="true" className="h-[18px] w-[18px]" />
+                    <FiShoppingCart
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px] transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6"
+                    />
                     <span>BUY NOW</span>
                   </button>
                 )}
@@ -627,9 +631,13 @@ export default function BikeDetailsPage() {
                 {bike.isForRent && (
                   <button
                     type="button"
-                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#143b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
+                    style={{ animationDelay: "100ms" }}
+                    className="group animate-[fadeInUp_0.5s_ease-out_both] inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-[#143b49] hover:shadow-lg hover:shadow-[#092532]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.97] motion-reduce:animate-none motion-reduce:transition-none"
                   >
-                    <FiCalendar aria-hidden="true" className="h-[18px] w-[18px]" />
+                    <FiCalendar
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6"
+                    />
                     <span>RENT NOW</span>
                   </button>
                 )}
@@ -637,9 +645,13 @@ export default function BikeDetailsPage() {
                 {bike.isForTrade && (
                   <button
                     type="button"
-                    className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#143b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0"
+                    style={{ animationDelay: "200ms" }}
+                    className="group animate-[fadeInUp_0.5s_ease-out_both] inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-[#143b49] hover:shadow-lg hover:shadow-[#092532]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.97] motion-reduce:animate-none motion-reduce:transition-none"
                   >
-                    <FiRepeat aria-hidden="true" className="h-[18px] w-[18px]" />
+                    <FiRepeat
+                      aria-hidden="true"
+                      className="h-[18px] w-[18px] transition-transform duration-300 group-hover:rotate-180 group-hover:scale-110"
+                    />
                     <span>TRADE NOW</span>
                   </button>
                 )}
