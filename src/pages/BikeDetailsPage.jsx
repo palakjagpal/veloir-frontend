@@ -35,6 +35,7 @@ import SendInquiryModal from "../components/deals/SendInquiryModal";
 import MakeOfferModal from "../components/deals/MakeOfferModal";
 
 import { getUserId } from "../lib/inquiryUtils";
+import RentalTerms from "../components/RentalTerms";
 
 export default function BikeDetailsPage() {
   const { id } = useParams();
@@ -1040,12 +1041,7 @@ export default function BikeDetailsPage() {
 
               {bike.rentalDetails
                 .terms && (
-                <p className="details-notes">
-                  {
-                    bike.rentalDetails
-                      .terms
-                  }
-                </p>
+                <RentalTerms terms={bike.rentalDetails.terms} />
               )}
 
             </section>
