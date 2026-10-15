@@ -191,9 +191,6 @@ export default function BikeActionOtpModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#092532] text-white">
-            <FiShield size={22} />
-          </div>
 
           <button
             type="button"
@@ -206,18 +203,14 @@ export default function BikeActionOtpModal({
         </div>
 
         <div className="mt-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-600">
-            Secure verification
-          </p>
-
           <h2 className="mt-1 text-2xl font-bold text-[#092532]">
             {isDelete
-              ? "Verify deletion"
-              : "Verify update"}
+              ? "Verify before deletion"
+              : "Verify before Updation"}
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-gray-500">
-            Enter the {OTP_LENGTH}-digit code sent to{" "}
+            Enter the {OTP_LENGTH}-digit code sent to your <br></br> registered email {" "}
             <strong className="text-gray-700">
               {maskedEmail || "your registered email"}
             </strong>
