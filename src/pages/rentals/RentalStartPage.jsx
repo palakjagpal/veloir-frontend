@@ -90,7 +90,7 @@ export default function RentalStartPage() {
                 {bike.rentalDetails?.pricePerDay > 0 && (
                   <p className="vr-start-daily-rate"><strong>{formatPrice(bike.rentalDetails.pricePerDay)}</strong><span>/ day</span></p>
                 )}
-                <div className="vr-start-assurance"><FiShield aria-hidden="true" /> <span>Booking, date availability and pricing are validated by Veloir’s rental API.</span></div>
+                <div className="vr-start-assurance"><FiShield aria-hidden="true" /> <span>Booking, date availability and pricing are validated by Veloir platform</span></div>
               </div>
             </section>
 
