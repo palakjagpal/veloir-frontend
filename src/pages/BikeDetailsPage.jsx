@@ -632,6 +632,7 @@ export default function BikeDetailsPage() {
                   <button
                     type="button"
                     style={{ animationDelay: "100ms" }}
+                    onClick={() => navigate(`/rentals/new/${bike._id}`)}
                     className="group animate-[fadeInUp_0.5s_ease-out_both] inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-transparent bg-[#092532] px-5 py-3 text-sm font-extrabold tracking-wide text-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-[#143b49] hover:shadow-lg hover:shadow-[#092532]/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#89C9B8] focus-visible:ring-offset-2 active:translate-y-0 active:scale-[0.97] motion-reduce:animate-none motion-reduce:transition-none"
                   >
                     <FiCalendar

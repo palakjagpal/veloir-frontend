@@ -29,6 +29,7 @@ import {
   TransferDetailPage
 } from "./pages/deals";
 import MyRentalsPage from "./pages/rentals/MyRentalsPage";
+import RentalStartPage from "./pages/rentals/RentalStartPage";
 import RentalCheckoutPage from "./pages/rentals/RentalCheckoutPage";
 import RentalDetailPage from "./pages/rentals/RentalDetailPage";
 import OwnerRentalManagementPage from "./pages/rentals/OwnerRentalManagementPage";
@@ -73,7 +74,8 @@ export default function App() {
         <Route path="/purchases/:id" element={guard(<PurchaseDetailPage />)} />
         <Route path="/transfers/:id" element={guard(<TransferDetailPage />)} />
 
-        {/* Rentals — added without replacing existing buy/sell/trade or deals routes */}
+        {/* Rentals — isolated from existing buy/sell/trade and deals routes */}
+        <Route path="/rentals/new/:bikeId" element={<RentalStartPage />} />
         <Route path="/rentals" element={guard(<MyRentalsPage />)} />
         <Route path="/rentals/:id/checkout" element={guard(<RentalCheckoutPage />)} />
         <Route path="/rentals/:id" element={guard(<RentalDetailPage />)} />

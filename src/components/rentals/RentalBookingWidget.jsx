@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FiCalendar, FiShield, FiClock } from "react-icons/fi";
@@ -25,8 +25,11 @@ export default function RentalBookingWidget({ bike }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [startDate, setStartDate] = useState(shiftDate(1));
-  const [endDate, setEndDate] = useState(shiftDate(2));
+  const returnParams = new URLSearchParams(location.search);
+  const returnStartDate = returnParams.get("startDate");
+  const returnEndDate = returnParams.get("endDate");
+  const [startDate, setStartDate] = useState(() => returnStartDate || shiftDate(1));
+  const [endDate, setEndDate] = useState(() => returnEndDate || shiftDate(2));
   const [quote, setQuote] = useState(null);
   const [quoting, setQuoting] = useState(false);
   const [booking, setBooking] = useState(false);
@@ -39,6 +42,29 @@ export default function RentalBookingWidget({ bike }) {
   const maxDuration = Math.min(180, Math.max(minDuration, Number(bike?.rentalDetails?.maxDuration) || 30));
   const minEndDate = addInputDays(startDate, minDuration);
   const maxEndDate = addInputDays(startDate, maxDuration);
+
+  // When a guest signs in to continue a rental request, the return URL carries
+  // the selected dates. Recalculate the quote instead of losing the user's input.
+  useEffect(() => {
+    if (!returnStartDate || !returnEndDate) return undefined;
+    let active = true;
+    setQuoting(true);
+    setError("");
+    quoteRental(bike._id, returnStartDate, returnEndDate)
+      .then((response) => {
+        if (!active) return;
+        setQuote(response);
+        if (response.available === false) setError(response.message || "Those dates are not available.");
+        else if (response.selfBooking || isOwner) setError("You cannot rent your own listing.");
+      })
+      .catch((requestError) => {
+        if (active) setError(requestError.message || "Could not restore the rental quote.");
+      })
+      .finally(() => {
+        if (active) setQuoting(false);
+      });
+    return () => { active = false; };
+  }, [bike._id, isOwner, returnStartDate, returnEndDate]);
 
   const loadQuote = async (event) => {
     event?.preventDefault();
@@ -55,7 +81,16 @@ export default function RentalBookingWidget({ bike }) {
 
   const submitBooking = async () => {
     if (!user) {
-      navigate("/login", { state: { from: location } });
+      const params = new URLSearchParams({ startDate, endDate });
+      navigate("/login", {
+        state: {
+          from: {
+            pathname: location.pathname,
+            search: `?${params.toString()}`,
+            hash: "",
+          },
+        },
+      });
       return;
     }
     if (isOwner) { toast.error("You cannot rent your own listing."); return; }
