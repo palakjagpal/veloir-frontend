@@ -4,8 +4,6 @@ import {
   FiArrowRight,
   FiCheckCircle,
   FiClock,
-  FiExternalLink,
-  FiInfo,
   FiRefreshCw,
   FiShield,
   FiTruck,
@@ -14,23 +12,11 @@ import {
 } from "react-icons/fi";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
-import {
-  getKycDocuments,
-  getKycStatus,
-  startDigiLockerVerification,
-  verifyMockKyc,
-} from "../services/kycService";
+import { getKycDocuments, getKycStatus } from "../services/kycService";
 import "../kyc.css";
-
-const DEMO_MODE = import.meta.env.VITE_KYC_DEMO_MODE !== "false";
-
-const isVerified = (doc) =>
-  doc?.status === "verified" &&
-  (!doc?.consent?.validTill || new Date(doc.consent.validTill) > new Date());
 
 const formatRecordedDateTime = (date) => {
   if (!date) return null;
-
   const parsedDate = new Date(date);
   if (Number.isNaN(parsedDate.getTime())) return null;
 
@@ -46,69 +32,84 @@ const formatRecordedDateTime = (date) => {
   }).format(parsedDate);
 };
 
-function StatusBadge({ verified, simulated }) {
-  return verified ? (
-    <span
-      className={`kyc-status-badge kyc-status-badge--verified ${
-        simulated ? "kyc-status-badge--simulated" : ""
-      }`}
-    >
-      <FiCheckCircle /> Verified
-    </span>
-  ) : (
-    <span className="kyc-status-badge kyc-status-badge--pending">
-      <FiClock /> Required
+const statusText = (status) => {
+  if (status === "verified") return "Admin approved";
+  if (status === "pending_review") return "Pending admin review";
+  if (status === "rejected") return "Rejected";
+  return "Not submitted";
+};
+
+function StatusBadge({ status }) {
+  const className = status === "verified"
+    ? "kyc-status-badge kyc-status-badge--verified"
+    : status === "rejected"
+      ? "kyc-status-badge kyc-status-badge--rejected"
+      : "kyc-status-badge kyc-status-badge--pending";
+
+  return (
+    <span className={className}>
+      {status === "verified" ? <FiCheckCircle /> : status === "rejected" ? <FiXCircle /> : <FiClock />}
+      {statusText(status)}
     </span>
   );
 }
 
-function DocumentCard({ title, icon, verified, simulated = false, document }) {
-  const recordedAt =
-    document?.lastCheckedAt || document?.updatedAt || document?.createdAt;
-  const formattedRecordedAt = formatRecordedDateTime(recordedAt);
+function DocumentCard({ title, icon, document }) {
+  const status = document?.status || "not_submitted";
+  const submittedAt = formatRecordedDateTime(document?.submittedAt || document?.createdAt);
+  const reviewedAt = formatRecordedDateTime(document?.reviewedAt || document?.verifiedAt);
+
+  const description = status === "verified"
+    ? "An authorised Veloir administrator has approved this manual document submission."
+    : status === "pending_review"
+      ? "Your details have been submitted and are awaiting administrator review. Protected actions remain blocked until approval."
+      : status === "rejected"
+        ? "An administrator rejected this submission. Review the note below, correct the details, and submit updated documents with a bike listing."
+        : "Driving Licence and Vehicle RC details are entered in the bike listing document section. Submissions stay blocked for protected actions until an administrator approves them.";
 
   return (
-    <article className={`kyc-document-card ${verified ? "is-verified" : ""}`}>
+    <article className={`kyc-document-card ${status === "verified" ? "is-verified" : ""}`}>
       <div className="kyc-document-icon">{icon}</div>
-
       <div className="kyc-document-main">
         <div className="kyc-document-topline">
           <div>
-            <p className="kyc-eyebrow">Identity document</p>
+            <p className="kyc-eyebrow">Manual document review</p>
             <h3>{title}</h3>
           </div>
-          <StatusBadge verified={verified} simulated={simulated} />
+          <StatusBadge status={status} />
         </div>
 
-        {verified ? (
-          <div className="kyc-document-details">
-            <p>
-              Holder: <strong>{document?.holderName || (simulated ? "Test record" : "Verified account holder")}</strong>
-            </p>
+        <p className="kyc-document-description">{description}</p>
 
-            {document?.documentNumberMasked && (
-              <p>
-                Document: <strong>{document.documentNumberMasked}</strong>
-              </p>
-            )}
-
-            {document?.vehicle?.registrationNumberMasked && (
-              <p>
-                Registration: <strong>{document.vehicle.registrationNumberMasked}</strong>
-              </p>
-            )}
-
-            {formattedRecordedAt && (
-              <div className="kyc-recorded-time">
-                <span>Result recorded on</span>
-                <strong>{formattedRecordedAt}</strong>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="kyc-document-description">
-            This document is required before protected Veloir actions can continue.
+        {document?.documentNumberMasked && (
+          <p>
+            Document number: <strong>{document.documentNumberMasked}</strong>
           </p>
+        )}
+
+        {document?.bike?.title && (
+          <p>
+            Submitted with listing: <strong>{document.bike.title}</strong>
+          </p>
+        )}
+
+        {document?.reviewNotes && (
+          <p className="kyc-review-note">
+            <strong>Administrator note:</strong> {document.reviewNotes}
+          </p>
+        )}
+
+        {submittedAt && (
+          <div className="kyc-recorded-time">
+            <span>Submitted</span>
+            <strong>{submittedAt}</strong>
+          </div>
+        )}
+        {reviewedAt && (
+          <div className="kyc-recorded-time">
+            <span>{status === "verified" ? "Approved" : "Reviewed"}</span>
+            <strong>{reviewedAt}</strong>
+          </div>
         )}
       </div>
     </article>
@@ -119,33 +120,22 @@ export default function KycVerificationPage() {
   const { user } = useAuth();
   const [status, setStatus] = useState(null);
   const [documents, setDocuments] = useState([]);
-  const [flow, setFlow] = useState("buyer_transaction");
-  const [registrationNumber, setRegistrationNumber] = useState("");
-  const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
 
-  const loadKyc = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) setRefreshing(true);
+  const loadKyc = useCallback(async () => {
+    setRefreshing(true);
     setError("");
-
     try {
       const [statusResponse, documentsResponse] = await Promise.all([
         getKycStatus(),
         getKycDocuments(),
       ]);
-
-      setStatus(statusResponse?.data?.data ?? statusResponse?.data ?? null);
-      setDocuments(
-        Array.isArray(documentsResponse?.data?.data)
-          ? documentsResponse.data.data
-          : Array.isArray(documentsResponse?.data)
-            ? documentsResponse.data
-            : []
-      );
+      setStatus(statusResponse?.data ?? statusResponse?.data?.data ?? null);
+      const responseDocuments = documentsResponse?.data;
+      setDocuments(Array.isArray(responseDocuments) ? responseDocuments : []);
     } catch (err) {
-      setError(err?.message || "Unable to load your KYC status.");
+      setError(err?.message || "Unable to load your manual document status.");
     } finally {
       setRefreshing(false);
     }
@@ -156,93 +146,18 @@ export default function KycVerificationPage() {
   }, [loadKyc]);
 
   const drivingLicense = useMemo(
-    () => documents.find((doc) => doc.documentType === "driving_license") || null,
-    [documents]
+    () => status?.drivingLicense || documents.find((doc) => doc.documentType === "driving_license") || null,
+    [status, documents],
+  );
+  const vehicleRc = useMemo(
+    () => status?.vehicleRc || documents.find((doc) => doc.documentType === "vehicle_rc") || null,
+    [status, documents],
   );
 
-  const latestVehicleRc = useMemo(
-    () =>
-      documents.find((doc) => doc.documentType === "vehicle_rc" && isVerified(doc)) ||
-      documents.find((doc) => doc.documentType === "vehicle_rc") ||
-      null,
-    [documents]
-  );
-
-  const buyerReady = Boolean(status?.canBuy);
-  const sellerReady = Boolean(status?.canSell);
-  const selectedFlowNeedsRc = flow === "seller_listing";
-  const selectedFlowComplete = selectedFlowNeedsRc ? sellerReady : buyerReady;
-  const verificationComplete = buyerReady && sellerReady;
-
-  const drivingLicenseIsSimulated =
-    (drivingLicense || status?.drivingLicense)?.provider === "mock_digilocker";
-  const vehicleRcIsSimulated =
-    (latestVehicleRc || status?.vehicleRc)?.provider === "mock_digilocker";
-
-  const latestVerifiedDocument = useMemo(() => {
-    return documents
-      .filter((doc) => isVerified(doc))
-      .sort(
-        (a, b) =>
-          new Date(b.lastCheckedAt || b.updatedAt || b.createdAt || 0).getTime() -
-          new Date(a.lastCheckedAt || a.updatedAt || a.createdAt || 0).getTime()
-      )[0] || null;
-  }, [documents]);
-
-  const latestRecordedAt = latestVerifiedDocument
-    ? latestVerifiedDocument.lastCheckedAt ||
-      latestVerifiedDocument.updatedAt ||
-      latestVerifiedDocument.createdAt
-    : null;
-
-  const handleVerification = async (demo = false) => {
-    if (selectedFlowComplete || verificationComplete) return;
-
-    setBusy(true);
-    setError("");
-    setNotice("");
-
-    try {
-      if (selectedFlowNeedsRc && !registrationNumber.trim()) {
-        throw new Error("Enter the vehicle registration number for RC verification.");
-      }
-
-      if (demo) {
-        const response = await verifyMockKyc({
-          flow,
-          vehicleRegistrationNumber: selectedFlowNeedsRc
-            ? registrationNumber.trim().toUpperCase()
-            : "",
-        });
-
-        setNotice(
-          response?.emailSent
-            ? "Verification workflow completed. A status notification email was sent."
-            : "Verification workflow completed. The status notification email could not be confirmed."
-        );
-
-        await loadKyc({ silent: true });
-        return;
-      }
-
-      const response = await startDigiLockerVerification({
-        flow,
-        vehicleRegistrationNumber: selectedFlowNeedsRc
-          ? registrationNumber.trim().toUpperCase()
-          : "",
-      });
-
-      if (!response?.authorizationUrl) {
-        throw new Error("The backend did not return a DigiLocker authorization URL.");
-      }
-
-      window.location.assign(response.authorizationUrl);
-    } catch (err) {
-      setError(err?.message || "Unable to start KYC verification.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const drivingLicenseVerified = Boolean(status?.drivingLicenseVerified);
+  const vehicleRcVerified = Boolean(status?.vehicleRcVerified);
+  const verificationComplete = drivingLicenseVerified && vehicleRc?.status === "verified";
+  const latestRecordedAt = drivingLicense?.verifiedAt || drivingLicense?.reviewedAt || drivingLicense?.submittedAt;
 
   return (
     <Layout>
@@ -250,19 +165,17 @@ export default function KycVerificationPage() {
         <div className="kyc-page-head">
           <div>
             <p className="eyebrow">Identity &amp; document checks</p>
-            <h1>Verify your documents</h1>
+            <h1>Manual document review</h1>
             <p className="kyc-page-subtitle">
-              Review your document status and complete the checks required for your Veloir
-              account. Your available marketplace actions update when the required checks are recorded.
+              Submit your Driving Licence and the listing's Vehicle RC details in the bike listing form. An authorised administrator must approve the submission before it can satisfy KYC checks.
             </p>
           </div>
-
           <button
             type="button"
             className="kyc-refresh"
-            onClick={() => loadKyc()}
+            onClick={loadKyc}
             disabled={refreshing}
-            title="Refresh KYC status"
+            title="Refresh manual document status"
           >
             <FiRefreshCw className={refreshing ? "kyc-spin" : ""} />
             Refresh
@@ -276,199 +189,104 @@ export default function KycVerificationPage() {
           </div>
         )}
 
-        {notice && (
-          <div className="kyc-alert kyc-alert--success" role="status">
-            <FiCheckCircle />
-            <span>{notice}</span>
-          </div>
-        )}
-
         <section className="kyc-summary-card">
-          <div className="kyc-summary-icon">
-            <FiShield />
-          </div>
+          <div className="kyc-summary-icon"><FiShield /></div>
           <div className="kyc-summary-copy">
             <p className="kyc-eyebrow">Account</p>
             <h2>{user?.name || "Veloir member"}</h2>
             <p>{user?.email || "Your signed-in Veloir account"}</p>
           </div>
           <div className="kyc-summary-state">
-            <span className="kyc-mini-label">Account verification</span>
+            <span className="kyc-mini-label">Manual review status</span>
             <strong>
               {verificationComplete
-                ? "All required checks completed"
-                : buyerReady
-                  ? "Identity check completed"
-                  : "Verification required"}
+                ? "Approved documents on record"
+                : drivingLicenseVerified
+                  ? "Driving Licence approved"
+                  : status?.latestSubmissionStatus === "pending_review"
+                    ? "Awaiting administrator review"
+                    : status?.latestSubmissionStatus === "rejected"
+                      ? "Submission rejected"
+                      : "Submission required"}
             </strong>
           </div>
         </section>
 
         <section className="kyc-documents-grid">
           <DocumentCard
-            title="Driving License"
+            title="Driving Licence"
             icon={<FiUserCheck />}
-            verified={Boolean(status?.drivingLicenseVerified)}
-            simulated={drivingLicenseIsSimulated}
-            document={drivingLicense || status?.drivingLicense}
+            document={drivingLicense}
           />
           <DocumentCard
-            title="Vehicle RC"
+            title="Vehicle Registration Certificate (RC)"
             icon={<FiTruck />}
-            verified={Boolean(status?.vehicleRcVerified)}
-            simulated={vehicleRcIsSimulated}
-            document={latestVehicleRc || status?.vehicleRc}
+            document={vehicleRc}
           />
         </section>
 
         {latestRecordedAt && (
           <div className="kyc-recorded-time kyc-recorded-time--summary">
             <FiClock />
-            <span>Latest verification result recorded on</span>
+            <span>Latest Driving Licence review activity</span>
             <strong>{formatRecordedDateTime(latestRecordedAt)}</strong>
           </div>
         )}
-        <br></br>
 
-        <section className={`kyc-flow-card ${verificationComplete ? "is-complete" : ""}`}>
+        <section className="kyc-flow-card">
           <div className="kyc-section-heading">
             <div>
-              <p className="kyc-eyebrow">Verification requirements</p>
-              <h2>
-                {verificationComplete
-                  ? "Your required checks are complete"
-                  : "Choose what you need to verify"}
-              </h2>
+              <p className="kyc-eyebrow">How manual review works</p>
+              <h2>{drivingLicenseVerified ? "Your Driving Licence is approved" : "Submit documents with a bike listing"}</h2>
             </div>
-            <div className="kyc-provider-chip">
-              {verificationComplete ? "Completed" : "Secure verification"}
-            </div>
+            <div className="kyc-provider-chip">Administrator approval required</div>
           </div>
 
-          {verificationComplete && (
-            <div className="kyc-alert kyc-alert--success kyc-complete-notice" role="status">
-              <FiCheckCircle />
-              <span>Your required document checks are complete.</span>
-            </div>
-          )}
-
-          <div className="kyc-flow-options">
-            <button
-              type="button"
-              className={`kyc-flow-option ${flow === "buyer_transaction" ? "selected" : ""} ${buyerReady ? "is-complete" : ""}`}
-              disabled={busy || buyerReady || verificationComplete}
-              aria-pressed={flow === "buyer_transaction"}
-              onClick={() => {
-                setFlow("buyer_transaction");
-                setError("");
-                setNotice("");
-              }}
-            >
-              <span className="kyc-flow-radio" />
-              <span>
-                <strong>Identity verification</strong>
-                <small>{buyerReady ? "Completed" : "Driving License required"}</small>
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className={`kyc-flow-option ${flow === "seller_listing" ? "selected" : ""} ${sellerReady ? "is-complete" : ""}`}
-              disabled={busy || sellerReady || verificationComplete}
-              aria-pressed={flow === "seller_listing"}
-              onClick={() => {
-                setFlow("seller_listing");
-                setError("");
-                setNotice("");
-              }}
-            >
-              <span className="kyc-flow-radio" />
-              <span>
-                <strong>Seller and vehicle verification</strong>
-                <small>{sellerReady ? "Completed" : "Driving License + Vehicle RC required"}</small>
-              </span>
-            </button>
+          <div className="kyc-process-steps">
+            <div><span>1</span><div><strong>Enter document details</strong><small>Use the RC &amp; licence section of Create a Bike Listing.</small></div></div>
+            <div><span>2</span><div><strong>Wait for review</strong><small>The submission remains pending and cannot satisfy KYC until an authorised admin reviews it.</small></div></div>
+            <div><span>3</span><div><strong>Continue after approval</strong><small>Rental booking checks your approved Driving Licence and separately checks the selected bike's RC.</small></div></div>
           </div>
-
-          {selectedFlowNeedsRc && (
-            <div className="kyc-field">
-              <label htmlFor="registrationNumber">Vehicle registration number</label>
-              <input
-                id="registrationNumber"
-                value={registrationNumber}
-                onChange={(event) => {
-                  setRegistrationNumber(event.target.value.toUpperCase());
-                  setError("");
-                }}
-                placeholder="e.g. PB10AB1234"
-                autoComplete="off"
-                disabled={busy || sellerReady || verificationComplete}
-              />
-              <small>
-                Enter the registration number exactly as it appears on the Vehicle Registration Certificate.
-              </small>
-            </div>
-          )}
 
           <div className="kyc-action-row">
-            {/*{DEMO_MODE && (
-              <button
-                type="button"
-                className="btn kyc-secondary-btn"
-                onClick={() => handleVerification(true)}
-                disabled={busy || selectedFlowComplete || verificationComplete}
-              >
-                {busy
-                  ? "Checking documents..."
-                  : selectedFlowComplete
-                    ? "Check completed"
-                    : "Continue to secure verification using Digilocker"}
-                <FiExternalLink />
-              </button>
-            )}*/}
-
-            <button
-              type="button"
-              className="btn kyc-secondary-btn"
-              onClick={() => handleVerification(false)}
-              disabled={busy || selectedFlowComplete || verificationComplete}
-            >
-              {selectedFlowComplete ? "Check completed" : "Continue to secure verification using Digilocker"}
-              <FiExternalLink />
-            </button>
+            <Link className="btn btn-mint" to="/bikes/create">
+              {drivingLicenseVerified ? "Submit documents for another bike" : "Go to bike listing documents"}
+              <FiArrowRight />
+            </Link>
+            <Link className="btn kyc-secondary-btn" to="/my-bikes">
+              View my listings <FiArrowRight />
+            </Link>
           </div>
-
-          
         </section>
 
         <section className="kyc-access-card">
           <div className="kyc-section-heading">
             <div>
-              <p className="kyc-eyebrow">What this unlocks</p>
-              <h2>Verification capabilities</h2>
+              <p className="kyc-eyebrow">Protected actions</p>
+              <h2>What your review status means</h2>
             </div>
           </div>
-
           <div className="kyc-capability-grid">
             {[
-              ["Buy", status?.canBuy, "Driving License"],
-              ["Make Offer", status?.canMakeOffers, "Driving License"],
-              ["Send Inquiry", status?.canMakeInquiries, "Driving License"],
-              ["Sell", status?.canSell, "Driving License + RC"],
-              ["Rent", status?.canRent, "Driving License + RC"],
-              ["Trade", status?.canTrade, "Driving License + RC"],
-              ["Ownership Transfer", status?.canTransferOwnership, "Driving License"],
+              ["Buy", status?.canBuy, "Approved Driving Licence"],
+              ["Make Offer", status?.canMakeOffers, "Approved Driving Licence"],
+              ["Send Inquiry", status?.canMakeInquiries, "Approved Driving Licence"],
+              ["Sell", status?.canSell, "Approved licence + listing RC"],
+              ["Rent a bike", status?.canRent, "Approved licence + selected bike RC check"],
+              ["Trade", status?.canTrade, "Approved licence + listing RC"],
+              ["Ownership Transfer", status?.canTransferOwnership, "Approved Driving Licence"],
             ].map(([label, ready, requirement]) => (
               <div className="kyc-capability" key={label}>
                 {ready ? <FiCheckCircle className="ready" /> : <FiClock />}
-                <div>
-                  <strong>{label}</strong>
-                  <small>{requirement}</small>
-                </div>
+                <div><strong>{label}</strong><small>{requirement}</small></div>
               </div>
             ))}
           </div>
         </section>
+
+        <p className="kyc-manual-disclaimer">
+          This is an administrative manual review of user-submitted details. It does not query or independently authenticate records against a government database.
+        </p>
 
         <div className="kyc-footer-actions">
           <Link to="/bikes">Back to marketplace <FiArrowRight /></Link>

@@ -1,0 +1,48 @@
+
+.manual-review-page { padding-top: 2rem; padding-bottom: 4rem; color: #092532; }
+.manual-review-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.25rem; margin-bottom: 1.25rem; }
+.manual-review-header h1 { margin: .25rem 0 .5rem; font-size: clamp(1.8rem, 4vw, 2.5rem); }
+.manual-review-header p:not(.eyebrow) { max-width: 760px; color: #53636a; line-height: 1.55; }
+.manual-review-refresh { display: inline-flex; gap: .55rem; align-items: center; justify-content: center; border: 1px solid #cbd8d7; border-radius: .75rem; padding: .7rem .9rem; background: #fff; color: #092532; font-weight: 700; white-space: nowrap; }
+.manual-review-refresh:disabled { opacity: .6; cursor: wait; }
+.manual-review-disclaimer { display: flex; gap: .7rem; align-items: flex-start; margin-bottom: 1rem; border: 1px solid #d6e4da; border-radius: .85rem; padding: .9rem 1rem; background: #f3faef; line-height: 1.5; }
+.manual-review-disclaimer svg { flex: 0 0 auto; margin-top: .1rem; }
+.manual-review-alert { display: flex; gap: .6rem; align-items: center; margin: .75rem 0; border-radius: .7rem; padding: .8rem 1rem; }
+.manual-review-alert.is-error { background: #fff0f0; color: #992727; }
+.manual-review-alert.is-success { background: #eef9ef; color: #215c39; }
+.manual-review-empty { display: flex; gap: .75rem; align-items: center; justify-content: center; min-height: 180px; border: 1px dashed #bdceca; border-radius: 1rem; color: #53636a; }
+.manual-review-list { display: grid; gap: 1rem; }
+.manual-review-card { border: 1px solid #d7e1df; border-radius: 1rem; padding: clamp(1rem, 2.5vw, 1.5rem); background: #fff; box-shadow: 0 8px 28px rgba(9,37,50,.06); }
+.manual-review-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; margin-bottom: 1rem; }
+.manual-review-card-head h2 { margin: .25rem 0; font-size: 1.25rem; }
+.manual-review-card-head p { color: #66767b; font-size: .9rem; }
+.manual-review-kicker { display: flex; align-items: center; gap: .4rem; }
+.manual-review-status { display: inline-flex; border-radius: 999px; padding: .35rem .7rem; background: #fff3d8; color: #80530a; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+.manual-review-user { display: flex; flex-wrap: wrap; gap: .4rem .8rem; border-radius: .65rem; padding: .75rem; margin-bottom: 1rem; background: #f5f8f7; }
+.manual-review-doc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.manual-review-doc-grid section { min-width: 0; border: 1px solid #e0e8e6; border-radius: .8rem; padding: .9rem; }
+.manual-review-doc-grid h3 { display: flex; gap: .45rem; align-items: center; margin-bottom: .65rem; font-size: 1rem; }
+.manual-review-doc-grid dl { margin: 0; }
+.manual-review-doc-grid dl > div { display: grid; grid-template-columns: minmax(110px, .8fr) minmax(0, 1.2fr); gap: .55rem; padding: .45rem 0; border-bottom: 1px solid #edf1f0; }
+.manual-review-doc-grid dl > div:last-child { border-bottom: 0; }
+.manual-review-doc-grid dt { color: #66767b; font-size: .86rem; }
+.manual-review-doc-grid dd { margin: 0; overflow-wrap: anywhere; font-weight: 650; }
+.manual-review-notes-label { display: block; margin: 1rem 0 .4rem; font-weight: 700; }
+.manual-review-card textarea { width: 100%; resize: vertical; border: 1px solid #cbd8d7; border-radius: .65rem; padding: .7rem; color: #092532; background: #fff; }
+.manual-review-card textarea:focus { outline: 2px solid #89c9b8; outline-offset: 1px; }
+.manual-review-actions { display: flex; justify-content: flex-end; gap: .7rem; margin-top: .9rem; }
+.manual-review-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; border-radius: .7rem; padding: .7rem .95rem; font-weight: 750; }
+.manual-review-actions button:disabled { opacity: .55; cursor: wait; }
+.manual-review-reject { border: 1px solid #c84444; background: #fff; color: #9d2929; }
+.manual-review-approve { border: 1px solid #092532; background: #092532; color: #e1ffc2; }
+.manual-review-spin { animation: manualReviewSpin 1s linear infinite; }
+@keyframes manualReviewSpin { to { transform: rotate(360deg); } }
+@media (max-width: 700px) {
+  .manual-review-header { align-items: stretch; flex-direction: column; }
+  .manual-review-refresh { width: 100%; }
+  .manual-review-doc-grid { grid-template-columns: 1fr; }
+  .manual-review-card-head { flex-direction: column; }
+  .manual-review-actions { flex-direction: column-reverse; }
+  .manual-review-actions button { width: 100%; }
+  .manual-review-doc-grid dl > div { grid-template-columns: minmax(90px, .75fr) minmax(0, 1.25fr); }
+}

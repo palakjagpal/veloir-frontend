@@ -17,6 +17,7 @@ import EditBikeListingPage from "./pages/EditBikeListingPage";
 import AllRegionsPage from "./pages/AllRegionsPage";
 import KycVerificationPage from "./pages/KycVerificationPage";
 import KycVerificationSuccessPage from "./pages/KycVerificationSuccessPage";
+import AdminManualDocumentReviewPage from "./pages/AdminManualDocumentReviewPage";
 
 import {
   DealsPage,
@@ -81,6 +82,7 @@ export default function App() {
         <Route path="/rentals/:id" element={guard(<RentalDetailPage />)} />
         <Route path="/rental-management" element={guard(<OwnerRentalManagementPage />)} />
         <Route path="/admin/rentals/disputes" element={guard(<AdminRentalDisputesPage />, ["admin"])} />
+        <Route path="/admin/document-review" element={guard(<AdminManualDocumentReviewPage />, ["admin"])} />
 
         <Route path="*" element={<HomePage />} />
       </Routes>

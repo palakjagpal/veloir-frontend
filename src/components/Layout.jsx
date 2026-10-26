@@ -20,7 +20,7 @@ import {
   FiPhone,
   FiCheckCircle,
   FiBriefcase,
-  FiInbox, FiPercent, FiShoppingBag, FiCalendar, FiShield
+  FiInbox, FiPercent, FiShoppingBag, FiCalendar, FiShield, FiFileText
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
@@ -159,6 +159,11 @@ function Header() {
                   onClick={() => setOpen(false)}
                 >
                   <FiShield /> Rental Disputes
+                </Link>
+              )}
+              {user.role === "admin" && (
+                <Link to="/admin/document-review" className="mobile-nav-link" onClick={() => setOpen(false)}>
+                  <FiFileText /> Document Review
                 </Link>
               )}
               <Link
@@ -319,6 +324,11 @@ function Header() {
                     onClick={() => setShowDropdown(false)}
                   >
                     <FiShield /> Rental Disputes
+                  </Link>
+                )}
+                {user.role === "admin" && (
+                  <Link to="/admin/document-review" className="dropdown-item" onClick={() => setShowDropdown(false)}>
+                    <FiFileText /> Document Review
                   </Link>
                 )}
                 <Link
@@ -516,6 +526,7 @@ function Footer() {
           <Link to="/rentals">My Rentals</Link>
           <Link to="/rental-management">Rental Management</Link>
           {user?.role === "admin" && <Link to="/admin/rentals/disputes">Rental Disputes</Link>}
+          {user?.role === "admin" && <Link to="/admin/document-review">Document Review</Link>}
         </div>
 
         <div className="footer-col">
@@ -562,3 +573,4 @@ export default function Layout({ children }) {
     </>
   );
 }
+

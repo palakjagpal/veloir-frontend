@@ -1,49 +1,22 @@
 import { api } from "../lib/api";
 
-/**
- * Get the current user's KYC capability summary.
- * Uses the existing Veloir api() helper, so the existing JWT handling stays unchanged.
- */
+/** Account-level KYC status derived from bike-listing manual document submissions. */
 export const getKycStatus = () => api("/api/kyc/status");
 
-/** Get the documents currently stored for the signed-in user. */
+/** Returns masked status records only; full document values remain admin-only. */
 export const getKycDocuments = () => api("/api/kyc/documents");
 
-/**
- * Start the DigiLocker flow.
- * In backend mock mode the returned authorizationUrl points to the backend mock callback.
- */
-export const startDigiLockerVerification = ({
-  flow = "buyer_transaction",
-  vehicleRegistrationNumber = "",
-} = {}) =>
-  api("/api/kyc/digilocker/start", {
-    method: "POST",
-    body: JSON.stringify({
-      flow,
-      ...(vehicleRegistrationNumber
-        ? { vehicleRegistrationNumber: vehicleRegistrationNumber.trim() }
-        : {}),
-    }),
-  });
+/** User-facing list of this account's manual submissions and review outcomes. */
+export const getMyManualDocumentSubmissions = () =>
+  api("/api/kyc/manual-submissions/me");
 
-/**
- * Development/demo-only shortcut.
- * Backend must have DIGILOCKER_MODE=mock.
- */
-export const verifyMockKyc = ({
-  flow = "buyer_transaction",
-  vehicleRegistrationNumber = "",
-} = {}) =>
-  api("/api/kyc/mock/verify", {
-    method: "POST",
-    body: JSON.stringify({
-      flow,
-      ...(vehicleRegistrationNumber
-        ? { vehicleRegistrationNumber: vehicleRegistrationNumber.trim() }
-        : {}),
-    }),
-  });
+/** Admin-only review queue. The backend enforces the administrator role. */
+export const getPendingManualDocumentSubmissions = () =>
+  api("/api/kyc/manual-submissions/pending");
 
-export const getKycSession = (sessionId) =>
-  api(`/api/kyc/sessions/${sessionId}`);
+/** Submit an admin's final decision for one pending bike-document submission. */
+export const reviewManualDocumentSubmission = (id, { decision, reviewNotes = "" }) =>
+  api(`/api/kyc/manual-submissions/${id}/review`, {
+    method: "PATCH",
+    body: JSON.stringify({ decision, reviewNotes }),
+  });
