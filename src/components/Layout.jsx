@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
+  FiActivity,
   FiArrowRight,
   FiBell,
   FiMenu,
@@ -152,6 +153,11 @@ function Header() {
               >
                 <FiCalendar /> Rental Management
               </Link>
+              {user.role === "admin" && (
+                <Link to="/admin" className="mobile-nav-link" onClick={() => setOpen(false)}>
+                  <FiActivity /> Admin Dashboard
+                </Link>
+              )}
               {user.role === "admin" && (
                 <Link
                   to="/admin/rentals/disputes"
@@ -525,6 +531,7 @@ function Footer() {
           <a href="/purchases">Purchases</a>
           <Link to="/rentals">My Rentals</Link>
           <Link to="/rental-management">Rental Management</Link>
+          {user?.role === "admin" && <Link to="/admin">Admin Dashboard</Link>}
           {user?.role === "admin" && <Link to="/admin/rentals/disputes">Rental Disputes</Link>}
           {user?.role === "admin" && <Link to="/admin/document-review">Document Review</Link>}
         </div>

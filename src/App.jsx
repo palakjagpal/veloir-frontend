@@ -18,6 +18,8 @@ import AllRegionsPage from "./pages/AllRegionsPage";
 import KycVerificationPage from "./pages/KycVerificationPage";
 import KycVerificationSuccessPage from "./pages/KycVerificationSuccessPage";
 import AdminManualDocumentReviewPage from "./pages/AdminManualDocumentReviewPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminListingsPage from "./pages/AdminListingsPage";
 
 import {
   DealsPage,
@@ -81,6 +83,8 @@ export default function App() {
         <Route path="/rentals/:id/checkout" element={guard(<RentalCheckoutPage />)} />
         <Route path="/rentals/:id" element={guard(<RentalDetailPage />)} />
         <Route path="/rental-management" element={guard(<OwnerRentalManagementPage />)} />
+        <Route path="/admin" element={guard(<AdminDashboardPage />, ["admin"])} />
+        <Route path="/admin/listings" element={guard(<AdminListingsPage />, ["admin"])} />
         <Route path="/admin/rentals/disputes" element={guard(<AdminRentalDisputesPage />, ["admin"])} />
         <Route path="/admin/document-review" element={guard(<AdminManualDocumentReviewPage />, ["admin"])} />
 
