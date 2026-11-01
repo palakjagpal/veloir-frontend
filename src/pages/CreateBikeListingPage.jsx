@@ -1277,7 +1277,7 @@ export default function CreateBikeListingPage() {
                       formatValue={formatDrivingLicenceInput}
                       maxLength={18}
                       placeholder="e.g. PB-10-2020-1234567"
-                      help="Format: SS-RR-YYYY-NNNNNNN (state code, RTO code, year, 7-digit serial)."
+                      help="SS-RR-YYYY-NNNNNNN (state code, RTO code, year, 7-digit serial)."
                     />
                     <label className="cbl-field">
                       <span>
@@ -1350,6 +1350,7 @@ export default function CreateBikeListingPage() {
                       </span>
                       <input
                         value={form.manualDocuments.rcVehicleMake}
+                        help="Eg: Honda, Tata, or Mahindra"
                         onChange={(e) =>
                           updateNested(
                             "manualDocuments",
@@ -1525,11 +1526,7 @@ export default function CreateBikeListingPage() {
           ) : null,
         )}
       </form>
-      <p className="cbl-footnote">
-        Your document identifiers are sent to the API over HTTPS in production
-        and are never written to browser storage by this form. Do not use
-        public/shared computers to submit documents.
-      </p>
+      
     </main>
   );
 }
