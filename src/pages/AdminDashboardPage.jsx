@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  FiActivity, FiArrowUpRight, FiBike, FiCalendar, FiCheckCircle,
+  FiActivity, FiArrowUpRight, FiTag, FiCalendar, FiCheckCircle,
   FiClock, FiFileText, FiRefreshCw, FiShield, FiShoppingBag, FiUsers,
   FiAlertCircle, FiInbox, FiPercent,
 } from "react-icons/fi";
@@ -14,7 +14,7 @@ const date = (value) => value ? new Date(value).toLocaleDateString("en-IN", { da
 
 const metricCards = [
   { key: "totalUsers", label: "Total users", icon: FiUsers, tone: "mint" },
-  { key: "totalBikes", label: "Bike listings", icon: FiBike, tone: "blue" },
+  { key: "totalBikes", label: "Bike listings", icon: FiTag, tone: "blue" },
   { key: "pendingBikes", label: "Pending listings", icon: FiClock, tone: "amber" },
   { key: "pendingManualReviews", label: "Manual KYC reviews", icon: FiShield, tone: "violet" },
   { key: "totalRentals", label: "Rental bookings", icon: FiCalendar, tone: "blue" },
@@ -24,7 +24,7 @@ const metricCards = [
 ];
 
 const adminLinks = [
-  { title: "Review bike listings", description: "Approve or reject pending marketplace listings.", to: "/admin/listings", icon: FiBike, countKey: "pendingBikes", action: "Open listings" },
+  { title: "Review bike listings", description: "Approve or reject pending marketplace listings.", to: "/admin/listings", icon: FiTag, countKey: "pendingBikes", action: "Open listings" },
   { title: "Manual document review", description: "Review submitted listing documents and record a decision.", to: "/admin/document-review", icon: FiFileText, countKey: "pendingManualReviews", action: "Review documents" },
   { title: "Rental disputes", description: "Review open disputes and follow the existing resolution workflow.", to: "/admin/rentals/disputes", icon: FiShield, countKey: "openDisputes", action: "Manage disputes" },
 ];
@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
               <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Bike</th><th>Submitted</th><th>Status</th></tr></thead><tbody>
                 {dashboard.recentBikes.map((bike) => <tr key={bike._id}><td><strong>{bike.title || `${bike.brand || "Bike"} ${bike.model || ""}`}</strong><span>{[bike.brand, bike.model].filter(Boolean).join(" · ")}</span></td><td>{date(bike.createdAt)}</td><td><span className={`admin-status-pill ${bike.isApproved ? "approved" : "pending"}`}>{bike.isApproved ? "Approved" : "Pending"}</span></td></tr>)}
               </tbody></table></div>
-            ) : <div className="admin-empty-state"><FiBike /><span>No bike listings found.</span></div>}
+            ) : <div className="admin-empty-state"><FiTag /><span>No bike listings found.</span></div>}
           </div>
 
           <div className="admin-data-panel">
