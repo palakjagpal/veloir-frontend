@@ -26,6 +26,15 @@ import {
 const currentYear = new Date().getFullYear();
 
 function toFormValues(bike) {
+  const existingTypes = [
+    bike.isForSale !== false ? "sale" : null,
+    bike.isForRent ? "rent" : null,
+    bike.isForTrade ? "trade" : null,
+  ].filter(Boolean);
+  // Legacy listings could have multiple flags. Keep an already-exclusive type;
+  // otherwise select one deterministically so the edit form starts valid.
+  const selectedType = existingTypes.length === 1 ? existingTypes[0] : (existingTypes[0] || "sale");
+
   return {
     title: bike.title || "",
     description: bike.description || "",
@@ -44,9 +53,9 @@ function toFormValues(bike) {
     country: bike.location?.country || "India",
     pincode: bike.location?.pincode || "",
 
-    isForSale: bike.isForSale !== false,
-    isForRent: Boolean(bike.isForRent),
-    isForTrade: Boolean(bike.isForTrade),
+    isForSale: selectedType === "sale",
+    isForRent: selectedType === "rent",
+    isForTrade: selectedType === "trade",
 
     fuelType: bike.specs?.fuelType || "Petrol",
     transmissionType:
@@ -114,12 +123,26 @@ export default function EditBikeListingPage() {
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm();
 
   const isForRent = watch("isForRent");
   const isForTrade = watch("isForTrade");
   const isForSale = watch("isForSale");
+  const dailyRentalPrice = Number(watch("pricePerDay"));
+  const calculatedPricePerWeek = Number.isFinite(dailyRentalPrice) && dailyRentalPrice > 0
+    ? Number((dailyRentalPrice * 7).toFixed(2))
+    : "";
+  const calculatedPricePerMonth = Number.isFinite(dailyRentalPrice) && dailyRentalPrice > 0
+    ? Number((dailyRentalPrice * 30).toFixed(2))
+    : "";
+
+  const selectListingType = (type) => {
+    setValue("isForSale", type === "sale", { shouldDirty: true, shouldValidate: true });
+    setValue("isForRent", type === "rent", { shouldDirty: true, shouldValidate: true });
+    setValue("isForTrade", type === "trade", { shouldDirty: true, shouldValidate: true });
+  };
 
   useEffect(() => {
     loadBike();
@@ -191,12 +214,8 @@ export default function EditBikeListingPage() {
             pricePerDay: data.pricePerDay
               ? Number(data.pricePerDay)
               : null,
-            pricePerWeek: data.pricePerWeek
-              ? Number(data.pricePerWeek)
-              : null,
-            pricePerMonth: data.pricePerMonth
-              ? Number(data.pricePerMonth)
-              : null,
+            pricePerWeek: Number((Number(data.pricePerDay) * 7).toFixed(2)),
+            pricePerMonth: Number((Number(data.pricePerDay) * 30).toFixed(2)),
             securityDeposit:
               data.securityDeposit
                 ? Number(data.securityDeposit)
@@ -243,21 +262,25 @@ export default function EditBikeListingPage() {
   };
 
   const onSubmit = async (data) => {
-    if (
-      !isForSale &&
-      !isForRent &&
-      !isForTrade
-    ) {
-      toast.error(
-        "Select at least one listing type."
-      );
+    const selectedTypeCount = [isForSale, isForRent, isForTrade].filter(Boolean).length;
+    if (selectedTypeCount !== 1) {
+      toast.error("Choose exactly one listing type: Sale, Rent or Trade.");
+      return;
+    }
+    if (isForRent && !(Number(data.pricePerDay) > 0)) {
+      toast.error("Enter a daily rental price greater than zero.");
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const changes = prepareChanges(data);
+      const changes = prepareChanges({
+        ...data,
+        isForSale,
+        isForRent,
+        isForTrade,
+      });
 
       const response = await api(
         `/api/bikes/${id}/security/request-otp`,
@@ -381,6 +404,38 @@ export default function EditBikeListingPage() {
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-8"
         >
+          {/* Choose one listing type before editing type-specific fields */}
+          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
+            <h2 className="mb-2 text-lg font-semibold text-[#092532]">Listing Type</h2>
+            <p className="mb-5 text-sm text-gray-500">Choose one option only. Relevant transaction fields are shown below.</p>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {[
+                ["sale", "For Sale", "Sell the bike at your asking price.", isForSale],
+                ["rent", "For Rent", "Set a daily rental rate and rental terms.", isForRent],
+                ["trade", "For Trade", "Specify your preferred exchange details.", isForTrade],
+              ].map(([type, label, description, selected]) => (
+                <label
+                  key={type}
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${selected ? "border-[#092532] bg-[#f0f7f4]" : "border-gray-200 bg-white"}`}
+                >
+                  <input
+                    type="radio"
+                    name="listingType"
+                    value={type}
+                    checked={Boolean(selected)}
+                    onChange={() => selectListingType(type)}
+                    disabled={submitting || otpOpen}
+                    className="mt-1 h-4 w-4 accent-[#092532]"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-[#092532]">{label}</span>
+                    <span className="mt-1 block text-xs leading-5 text-gray-500">{description}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </section>
+
           {/* Basic details */}
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
             <h2 className="mb-5 text-lg font-semibold text-[#092532]" style={{
@@ -497,7 +552,7 @@ export default function EditBikeListingPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700">
-                  Price (₹) *
+                  {isForSale ? "Selling Price (₹) *" : "Bike Value (₹) *"}
                 </label>
 
                 <input
@@ -685,41 +740,6 @@ export default function EditBikeListingPage() {
             </div>
           </section>
 
-          {/* Listing type */}
-          <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-            <h2 className="mb-5 text-lg font-semibold text-[#092532]" style={{
-                letterSpacing: "1px",
-                wordSpacing: "2px",
-              }}>
-              Listing Type
-            </h2>
-            <br></br>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {[
-                ["isForSale", "For Sale"],
-                ["isForRent", "For Rent"],
-                ["isForTrade", "For Trade"],
-              ].map(([field, label]) => (
-                <label
-                  key={field}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 p-4"
-                >
-                  <input
-                    type="checkbox"
-                    {...register(field)}
-                    disabled={submitting || otpOpen}
-                    className="h-4 w-4 accent-emerald-600"
-                  />
-
-                  <span className="text-sm font-medium text-gray-700">
-                    {label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </section>
-
           {/* Specs */}
           <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
             <h2 className="mb-5 text-lg font-semibold text-[#092532]" style={{
@@ -857,9 +877,11 @@ export default function EditBikeListingPage() {
 
                   <input
                     type="number"
-                    {...register("pricePerWeek")}
+                    value={calculatedPricePerWeek}
+                    readOnly
+                    aria-readonly="true"
                     disabled={submitting || otpOpen}
-                    className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-emerald-400"
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none focus:border-emerald-400"
                   />
                 </div>
 
@@ -870,9 +892,11 @@ export default function EditBikeListingPage() {
 
                   <input
                     type="number"
-                    {...register("pricePerMonth")}
+                    value={calculatedPricePerMonth}
+                    readOnly
+                    aria-readonly="true"
                     disabled={submitting || otpOpen}
-                    className="mt-2 w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-emerald-400"
+                    className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none focus:border-emerald-400"
                   />
                 </div>
 

@@ -26,7 +26,7 @@ const INITIAL_FORM = {
   mileage: "",
   engineCapacity: "",
   color: "",
-  isForSale: true,
+  isForSale: false,
   isForRent: false,
   isForTrade: false,
   fuelType: "Petrol",
@@ -76,10 +76,13 @@ const INITIAL_FORM = {
 };
 
 const SECTIONS = [
-  { title: "Bike details", description: "Tell buyers about the motorcycle." },
   {
     title: "Listing options",
-    description: "Choose how it can be listed and add specifications.",
+    description: "Choose exactly one way to list your motorcycle.",
+  },
+  {
+    title: "Bike details & specifications",
+    description: "Enter the bike information and details for your selected listing type.",
   },
   {
     title: "Location",
@@ -94,6 +97,12 @@ const SECTIONS = [
     description: "Add images and confirm your listing details.",
   },
 ];
+
+function calculateRentalRate(pricePerDay, durationDays) {
+  const dailyRate = Number(pricePerDay);
+  if (!Number.isFinite(dailyRate) || dailyRate <= 0) return "";
+  return Number((dailyRate * durationDays).toFixed(2));
+}
 
 function formatApiError(payload, fallback) {
   if (payload?.errors && typeof payload.errors === "object") {
@@ -167,25 +176,24 @@ export default function CreateBikeListingPage() {
   );
 
   const update = (field, value) => {
-    const sectionIndex = [
-      "title",
-      "description",
-      "brand",
-      "model",
-      "year",
-      "price",
-      "category",
-      "condition",
-      "mileage",
-      "engineCapacity",
-      "color",
-    ].includes(field)
+    const sectionIndex = ["isForSale", "isForRent", "isForTrade"].includes(field)
       ? 0
       : 1;
     setCompletedSections((prev) =>
       prev.filter((section) => section < sectionIndex),
     );
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const selectListingType = (type) => {
+    setForm((prev) => ({
+      ...prev,
+      isForSale: type === "sale",
+      isForRent: type === "rent",
+      isForTrade: type === "trade",
+    }));
+    setCompletedSections([]);
+    setSectionErrors((prev) => ({ ...prev, 0: "", 1: "" }));
   };
   const updateNested = (group, field, value) => {
     const sectionIndex =
@@ -240,13 +248,22 @@ export default function CreateBikeListingPage() {
         errors.push(`${label} is required.`);
     };
     if (sectionIndex === 0) {
+      const selectedTypeCount = [
+        form.isForSale,
+        form.isForRent,
+        form.isForTrade,
+      ].filter(Boolean).length;
+      if (selectedTypeCount !== 1) {
+        errors.push("Choose exactly one listing option: Buy / Sell, Rent or Trade.");
+      }
+    } else if (sectionIndex === 1) {
       [
         [form.title, "Title"],
         [form.description, "Description"],
         [form.brand, "Brand"],
         [form.model, "Model"],
         [form.year, "Year"],
-        [form.price, "Price"],
+        [form.price, "Bike value"],
         [form.category, "Category"],
         [form.condition, "Condition"],
         [form.engineCapacity, "Engine capacity"],
@@ -261,14 +278,11 @@ export default function CreateBikeListingPage() {
       )
         errors.push("Enter a valid model year.");
       if (!(Number(form.price) > 0))
-        errors.push("Price must be greater than zero.");
+        errors.push("Bike value must be greater than zero.");
       if (form.mileage !== "" && Number(form.mileage) < 0)
         errors.push("Mileage cannot be negative.");
       if (!(Number(form.engineCapacity) >= 50))
         errors.push("Engine capacity must be at least 50cc.");
-    } else if (sectionIndex === 1) {
-      if (!form.isForSale && !form.isForRent && !form.isForTrade)
-        errors.push("Choose at least one listing option.");
       if (form.isForRent && !(Number(form.rentalDetails.pricePerDay) > 0))
         errors.push("Enter a daily rental price greater than zero.");
       if (
@@ -478,12 +492,8 @@ export default function CreateBikeListingPage() {
         JSON.stringify({
           ...form.rentalDetails,
           pricePerDay: Number(form.rentalDetails.pricePerDay),
-          pricePerWeek: form.rentalDetails.pricePerWeek
-            ? Number(form.rentalDetails.pricePerWeek)
-            : null,
-          pricePerMonth: form.rentalDetails.pricePerMonth
-            ? Number(form.rentalDetails.pricePerMonth)
-            : null,
+          pricePerWeek: calculateRentalRate(form.rentalDetails.pricePerDay, 7),
+          pricePerMonth: calculateRentalRate(form.rentalDetails.pricePerDay, 30),
           securityDeposit: form.rentalDetails.securityDeposit
             ? Number(form.rentalDetails.securityDeposit)
             : null,
@@ -716,6 +726,56 @@ export default function CreateBikeListingPage() {
               ) : null}
 
               {index === 0 ? (
+                <div className="cbl-stack">
+                  <p className="cbl-muted">
+                    Select one option only. The form will show fields relevant to your selection.
+                  </p>
+                  <div className="cbl-option-grid">
+                    <label className={`cbl-option-card ${form.isForSale ? "selected" : ""}`}>
+                      <input
+                        type="radio"
+                        name="listingType"
+                        value="sale"
+                        checked={form.isForSale}
+                        onChange={() => selectListingType("sale")}
+                      />
+                      <span>
+                        <strong>Buy / Sell</strong>
+                        <small>List the bike for direct sale.</small>
+                      </span>
+                    </label>
+                    <label className={`cbl-option-card ${form.isForRent ? "selected" : ""}`}>
+                      <input
+                        type="radio"
+                        name="listingType"
+                        value="rent"
+                        checked={form.isForRent}
+                        onChange={() => selectListingType("rent")}
+                      />
+                      <span>
+                        <strong>Rent</strong>
+                        <small>Offer the bike for rental.</small>
+                      </span>
+                    </label>
+                    <label className={`cbl-option-card ${form.isForTrade ? "selected" : ""}`}>
+                      <input
+                        type="radio"
+                        name="listingType"
+                        value="trade"
+                        checked={form.isForTrade}
+                        onChange={() => selectListingType("trade")}
+                      />
+                      <span>
+                        <strong>Trade</strong>
+                        <small>Consider exchange offers.</small>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              ) : null}
+
+              {index === 1 ? (
+                <div className="cbl-stack">
                 <div className="cbl-grid">
                   <label className="cbl-field cbl-span-2">
                     <span>
@@ -777,7 +837,7 @@ export default function CreateBikeListingPage() {
                   </label>
                   <label className="cbl-field">
                     <span>
-                      Price (₹) <b>*</b>
+                      {form.isForSale ? "Selling price (₹)" : "Bike value (₹)"} <b>*</b>
                     </span>
                     <input
                       type="number"
@@ -860,51 +920,7 @@ export default function CreateBikeListingPage() {
                     />
                   </label>
                 </div>
-              ) : null}
 
-              {index === 1 ? (
-                <div className="cbl-stack">
-                  <div className="cbl-option-grid">
-                    <label
-                      className={`cbl-option-card ${form.isForSale ? "selected" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.isForSale}
-                        onChange={(e) => update("isForSale", e.target.checked)}
-                      />
-                      <span>
-                        <strong>Buy / Sell</strong>
-                        <small>List the bike for sale.</small>
-                      </span>
-                    </label>
-                    <label
-                      className={`cbl-option-card ${form.isForRent ? "selected" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.isForRent}
-                        onChange={(e) => update("isForRent", e.target.checked)}
-                      />
-                      <span>
-                        <strong>Rent</strong>
-                        <small>Offer the bike for rental.</small>
-                      </span>
-                    </label>
-                    <label
-                      className={`cbl-option-card ${form.isForTrade ? "selected" : ""}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.isForTrade}
-                        onChange={(e) => update("isForTrade", e.target.checked)}
-                      />
-                      <span>
-                        <strong>Trade</strong>
-                        <small>Consider exchange offers.</small>
-                      </span>
-                    </label>
-                  </div>
                   {form.isForRent ? (
                     <div className="cbl-subpanel">
                       <h3>Rental details</h3>
@@ -927,33 +943,21 @@ export default function CreateBikeListingPage() {
                           />
                         </label>
                         <label className="cbl-field">
-                          <span>Price per week (₹)</span>
+                          <span>Price per week (₹) · Calculated</span>
                           <input
                             type="number"
-                            min="0"
-                            value={form.rentalDetails.pricePerWeek}
-                            onChange={(e) =>
-                              updateNested(
-                                "rentalDetails",
-                                "pricePerWeek",
-                                e.target.value,
-                              )
-                            }
+                            value={calculateRentalRate(form.rentalDetails.pricePerDay, 7)}
+                            readOnly
+                            aria-readonly="true"
                           />
                         </label>
                         <label className="cbl-field">
-                          <span>Price per month (₹)</span>
+                          <span>Price per month (₹) · Calculated</span>
                           <input
                             type="number"
-                            min="0"
-                            value={form.rentalDetails.pricePerMonth}
-                            onChange={(e) =>
-                              updateNested(
-                                "rentalDetails",
-                                "pricePerMonth",
-                                e.target.value,
-                              )
-                            }
+                            value={calculateRentalRate(form.rentalDetails.pricePerDay, 30)}
+                            readOnly
+                            aria-readonly="true"
                           />
                         </label>
                         <label className="cbl-field">
@@ -1160,6 +1164,7 @@ export default function CreateBikeListingPage() {
                       </label>
                     </div>
                   </div>
+
                 </div>
               ) : null}
 
