@@ -78,23 +78,23 @@ const INITIAL_FORM = {
 const SECTIONS = [
   {
     title: "Listing options",
-    description: "Choose exactly one way to list your motorcycle.",
+    description: "Choose exactly one way to list your motorcycle",
   },
   {
     title: "Bike details & specifications",
-    description: "Enter the bike information and details for your selected listing type.",
+    description: "Enter the bike information and details for your selected listing type",
   },
   {
     title: "Location",
-    description: "Set the listing's location or select an autocomplete result.",
+    description: "Set the listing's location or select an autocomplete result",
   },
   {
     title: "RC & licence",
-    description: "Enter the details for confidential manual review.",
+    description: "Enter details of your bike",
   },
   {
     title: "Photos & review",
-    description: "Add images and confirm your listing details.",
+    description: "Add images and confirm your listing details",
   },
 ];
 
@@ -1247,15 +1247,7 @@ export default function CreateBikeListingPage() {
 
               {index === 3 ? (
                 <div className="cbl-stack">
-                  <div className="cbl-doc-warning">
-                    <strong>Confidential document entry</strong>
-                    <p>
-                      Document numbers are encrypted before database storage and
-                      are masked in normal responses. Submitting them is a
-                      self-declaration only; an authorised reviewer must check
-                      the documents before they can be marked verified.
-                    </p>
-                  </div>
+                  
                   <div className="cbl-grid">
                     <MaskedField
                       label="Vehicle registration number"
