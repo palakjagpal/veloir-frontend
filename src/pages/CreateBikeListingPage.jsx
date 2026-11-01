@@ -111,6 +111,21 @@ function formatApiError(payload, fallback) {
   return payload?.message || fallback;
 }
 
+// Converts a typed/pasted Indian driving-licence number into SS-RR-YYYY-NNNNNNN.
+// Letters are accepted only in the state-code segment; the remaining segments are numeric.
+function formatDrivingLicenceInput(value) {
+  const compact = String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const stateCode = compact.slice(0, 2).replace(/[^A-Z]/g, "");
+  const digits = compact.slice(2).replace(/\D/g, "").slice(0, 13);
+  const parts = [stateCode];
+
+  if (digits.length > 0) parts.push(digits.slice(0, 2));
+  if (digits.length > 2) parts.push(digits.slice(2, 6));
+  if (digits.length > 6) parts.push(digits.slice(6, 13));
+
+  return parts.filter(Boolean).join("-");
+}
+
 function MaskedField({
   label,
   value,
@@ -120,8 +135,9 @@ function MaskedField({
   required = true,
   help,
   inputMode = "text",
+  maxLength = 25,
+  formatValue,
 }) {
-  const [visible, setVisible] = useState(false);
   return (
     <label className="cbl-field">
       <span>
@@ -131,25 +147,23 @@ function MaskedField({
       <div className="cbl-secret-input">
         <input
           name={name}
-          type={visible ? "text" : "password"}
+          type="password"
           value={value}
-          onChange={(event) => onChange(event.target.value.toUpperCase())}
+          onChange={(event) =>
+            onChange(
+              formatValue
+                ? formatValue(event.target.value)
+                : event.target.value.toUpperCase(),
+            )
+          }
           placeholder={placeholder}
           required={required}
           autoComplete="off"
           autoCorrect="off"
           spellCheck="false"
           inputMode={inputMode}
-          maxLength={25}
+          maxLength={maxLength}
         />
-        <button
-          type="button"
-          className="cbl-show-secret"
-          onClick={() => setVisible((state) => !state)}
-          aria-label={`${visible ? "Hide" : "Show"} ${label}`}
-        >
-          {visible ? "Hide" : "Show"}
-        </button>
       </div>
       {help ? <small>{help}</small> : null}
     </label>
@@ -322,12 +336,12 @@ export default function CreateBikeListingPage() {
           "Vehicle registration number must contain 5–20 letters/numbers.",
         );
       if (
-        !/^[A-Z0-9/-]{8,25}$/.test(
-          docs.drivingLicenceNumber.replace(/\s+/g, "").toUpperCase(),
+        !/^[A-Z]{2}-\d{2}-\d{4}-\d{7}$/.test(
+          docs.drivingLicenceNumber.trim().toUpperCase(),
         )
       )
         errors.push(
-          "Driving licence number must contain 8–25 letters/numbers.",
+          "Enter the driving licence number in SS-RR-YYYY-NNNNNNN format (e.g. PB-10-2020-1234567).",
         );
       if (
         docs.rcRegistrationDate &&
@@ -1268,8 +1282,10 @@ export default function CreateBikeListingPage() {
                           value,
                         )
                       }
-                      placeholder="Enter the licence number"
-                      help="Only an authorised manual reviewer can access the submitted value."
+                      formatValue={formatDrivingLicenceInput}
+                      maxLength={18}
+                      placeholder="e.g. PB-10-2020-1234567"
+                      help="Format: SS-RR-YYYY-NNNNNNN (state code, RTO code, year, 7-digit serial)."
                     />
                     <label className="cbl-field">
                       <span>
