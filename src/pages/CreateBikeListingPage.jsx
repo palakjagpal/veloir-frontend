@@ -90,7 +90,7 @@ const SECTIONS = [
   },
   {
     title: "RC & licence",
-    description: "Enter details of your bike",
+    description: "Enter the vehicle details",
   },
   {
     title: "Photos & review",
@@ -149,13 +149,12 @@ function MaskedField({
           name={name}
           type="password"
           value={value}
-          onChange={(event) =>
-            onChange(
-              formatValue
-                ? formatValue(event.target.value)
-                : event.target.value.toUpperCase(),
-            )
-          }
+          // Keep the value unformatted while the user is typing so the caret
+          // never jumps when separators are inserted. Format on blur instead.
+          onChange={(event) => onChange(event.target.value.toUpperCase())}
+          onBlur={(event) => {
+            if (formatValue) onChange(formatValue(event.target.value));
+          }}
           placeholder={placeholder}
           required={required}
           autoComplete="off"
@@ -1350,7 +1349,7 @@ export default function CreateBikeListingPage() {
                       </span>
                       <input
                         value={form.manualDocuments.rcVehicleMake}
-                        help="Eg: Honda, Tata, or Mahindra"
+                        placeholder="Eg : Hero, Bajaj, TVS, or Royal Enfield"
                         onChange={(e) =>
                           updateNested(
                             "manualDocuments",
