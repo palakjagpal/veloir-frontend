@@ -20,6 +20,7 @@ import KycVerificationSuccessPage from "./pages/KycVerificationSuccessPage";
 import AdminManualDocumentReviewPage from "./pages/AdminManualDocumentReviewPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminListingsPage from "./pages/AdminListingsPage";
+import AdminLoginPage from "./pages/AdminLoginPage";
 
 import {
   DealsPage,
@@ -57,6 +58,8 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/regions" element={<AllRegionsPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+
 
         {/* Authenticated */}
         <Route path="/settings" element={guard(<SettingsPage />)} />
@@ -66,6 +69,7 @@ export default function App() {
         <Route path="/bikes/create" element={guard(<CreateBikeListingPage />)} />
         <Route path="/bikes/:id/edit" element={guard(<EditBikeListingPage />)} />
         <Route path="/my-bikes" element={guard(<MyBikesPage />)} />
+        <Route path="/admin" element={guard(<AdminDashboardPage />, ["admin"])} />
 
         {/* Deals*/}
         <Route path="/deals" element={guard(<DealsPage />)} />
