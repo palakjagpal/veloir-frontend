@@ -66,6 +66,14 @@ function safeParse(value) {
 function readStoredToken() {
   if (typeof window === "undefined") return "";
 
+  // Administrator endpoints require the dedicated admin session token.
+  try {
+    const adminToken = window.localStorage.getItem("veloir_admin_token");
+    if (adminToken && adminToken.trim()) return adminToken.trim();
+  } catch {
+    // Storage may be unavailable; fall back to the legacy lookup below.
+  }
+
   const directKeys = [
     "token",
     "accessToken",

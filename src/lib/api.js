@@ -129,8 +129,28 @@ export const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(value || 0);
 
+
+// Endpoints protected by the dedicated administrator middleware. These must be
+// called with the administrator session token, never the customer token.
+const ADMIN_TOKEN_STORAGE_KEY = "veloir_admin_token";
+function isAdminEndpoint(path, method = "GET") {
+  const p = String(path || "").split("?")[0];
+  if (p.startsWith("/api/admin/") || p === "/api/admin") return true;
+  if (p.startsWith("/api/rentals/admin/")) return true;
+  if (p === "/api/kyc/manual-submissions/pending") return true;
+  if (/^\/api\/kyc\/manual-submissions\/[^/]+\/review$/.test(p)) return true;
+  return false;
+}
+function getAdminToken() {
+  try {
+    return localStorage.getItem(ADMIN_TOKEN_STORAGE_KEY)?.trim() || "";
+  } catch {
+    return "";
+  }
+}
+
 export async function api(path, options = {}) {
-  const token = getAuthToken();
+  const token = isAdminEndpoint(path) ? (getAdminToken() || getAuthToken()) : getAuthToken();
   const suppliedHeaders = new Headers(options.headers || {});
   const headers = new Headers();
   suppliedHeaders.forEach((value, key) => headers.set(key, value));
