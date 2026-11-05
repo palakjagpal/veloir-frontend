@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Activity,
   AlertTriangle,
@@ -8,12 +8,8 @@ import {
   Bell,
   CalendarDays,
   CheckCircle2,
-  ChevronRight,
-  CircleHelp,
   Clock3,
   FileCheck2,
-  LayoutDashboard,
-  Menu,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -33,7 +29,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAdminAuth } from "../context/AdminAuthContext";
 
 const RAW_API_BASE =
   import.meta.env.VITE_API_URL ||
@@ -44,13 +41,6 @@ const CLEAN_API_BASE = String(RAW_API_BASE).replace(/\/+$/, "");
 const API_BASE = CLEAN_API_BASE.endsWith("/api")
   ? CLEAN_API_BASE
   : `${CLEAN_API_BASE}/api`;
-
-const NAV_ITEMS = [
-  { label: "Overview", to: "/admin", icon: LayoutDashboard, end: true },
-  { label: "Bike listings", to: "/admin/listings", icon: Bike },
-  { label: "Document reviews", to: "/admin/document-review", icon: FileCheck2 },
-  { label: "Rental disputes", to: "/admin/rentals/disputes", icon: ShieldCheck },
-];
 
 const PIE_COLORS = ["#092532", "#89c9b8"];
 
@@ -114,23 +104,6 @@ function readStoredToken() {
   }
 
   return "";
-}
-
-function readStoredAdmin() {
-  if (typeof window === "undefined") return null;
-  const keys = ["user", "userInfo", "currentUser", "authUser", "profile"];
-  const stores = [window.localStorage, window.sessionStorage].filter(Boolean);
-
-  for (const store of stores) {
-    for (const key of keys) {
-      const value = safeParse(store.getItem(key));
-      if (value && typeof value === "object") {
-        const candidate = value.user || value.currentUser || value;
-        if (candidate && (candidate.name || candidate.email || candidate.role)) return candidate;
-      }
-    }
-  }
-  return null;
 }
 
 async function adminRequest(path, signal) {
@@ -207,7 +180,7 @@ function MetricCard({ label, value, detail, icon: Icon, iconClass, delay = 0 }) 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-bold tracking-wide text-[#71817f]">{label}</p>
-          <p className="mt-3 text-3xl font-extrabold tracking-tight text-[#092532] sm:text-[34px]">
+          <p className="mt-3 text-3xl font-extrabold tracking-normal text-[#092532] sm:text-[34px]">
             {formatNumber(value)}
           </p>
           <p className="mt-1.5 text-xs font-medium text-[#82908c]">{detail}</p>
@@ -222,11 +195,11 @@ function MetricCard({ label, value, detail, icon: Icon, iconClass, delay = 0 }) 
 
 function StatusPill({ approved }) {
   return approved ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e7f5ec] px-2.5 py-1 text-[11px] font-bold text-[#28734c]">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e7f5ec] px-2.5 py-1 text-xs font-bold text-[#28734c]">
       <CheckCircle2 size={12} /> Published
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fff4dc] px-2.5 py-1 text-[11px] font-bold text-[#936b1a]">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fff4dc] px-2.5 py-1 text-xs font-bold text-[#936b1a]">
       <Clock3 size={12} /> Pending
     </span>
   );
@@ -237,11 +210,11 @@ function SectionHeading({ eyebrow, title, action, onAction }) {
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
         {eyebrow ? (
-          <p className="mb-1 text-[10px] font-extrabold uppercase tracking-[1.6px] text-[#648078]">
+          <p className="mb-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#648078]">
             {eyebrow}
           </p>
         ) : null}
-        <h2 className="text-lg font-extrabold tracking-tight text-[#092532] sm:text-xl">{title}</h2>
+        <h2 className="text-lg font-extrabold tracking-normal text-[#092532] sm:text-xl">{title}</h2>
       </div>
       {action ? (
         <button
@@ -272,122 +245,14 @@ function LoadingDashboard() {
   );
 }
 
-function Sidebar({ open, onClose, admin }) {
-  return (
-    <>
-      <AnimatePresence>
-        {open ? (
-          <motion.button
-            type="button"
-            aria-label="Close navigation"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-40 bg-[#061a23]/60 backdrop-blur-[2px] lg:hidden"
-          />
-        ) : null}
-      </AnimatePresence>
-
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col bg-[#092532] text-white shadow-2xl transition-transform duration-300 ease-out lg:translate-x-0 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        } lg:z-30 lg:shadow-none`}
-      >
-        <div className="flex h-[82px] items-center justify-between border-b border-white/10 px-6">
-          <NavLink to="/admin" onClick={onClose} className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#89c9b8] text-[#092532]">
-              <Bike size={23} strokeWidth={2.3} />
-            </span>
-            <span>
-              <span className="block font-['Comfortaa'] text-[21px] font-bold tracking-[-1.3px]">veloir</span>
-              <span className="mt-0.5 block text-[9px] font-extrabold uppercase tracking-[2px] text-[#89c9b8]">Admin console</span>
-            </span>
-          </NavLink>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close menu"
-            className="grid h-9 w-9 place-items-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
-          >
-            <X size={19} />
-          </button>
-        </div>
-
-        <div className="px-4 pt-7">
-          <p className="mb-3 px-3 text-[10px] font-extrabold uppercase tracking-[1.6px] text-white/40">
-            Workspace
-          </p>
-          <nav className="space-y-1" aria-label="Admin navigation">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  onClick={onClose}
-                  className={({ isActive }) =>
-                    `group flex min-h-11 items-center gap-3 rounded-xl px-3.5 text-[13px] font-bold transition ${
-                      isActive
-                        ? "bg-[#89c9b8] text-[#092532] shadow-[0_8px_18px_rgba(137,201,184,0.16)]"
-                        : "text-white/65 hover:bg-white/[0.07] hover:text-white"
-                    }`
-                  }
-                >
-                  <Icon size={18} strokeWidth={2.1} />
-                  <span>{item.label}</span>
-                  <ChevronRight className="ml-auto opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-60" size={15} />
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="mt-auto px-4 pb-5">
-          <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.055] p-4">
-            <div className="mb-3 flex items-center gap-2 text-[#c7e2b2]">
-              <CircleHelp size={16} />
-              <span className="text-[11px] font-extrabold">Admin workspace</span>
-            </div>
-            <p className="text-[11px] leading-5 text-white/55">
-              Review marketplace activity, verify documents and manage rental escalations.
-            </p>
-            <NavLink
-              to="/"
-              onClick={onClose}
-              className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold text-[#89c9b8] hover:text-white"
-            >
-              Open marketplace <ArrowRight size={13} />
-            </NavLink>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl px-2 py-2">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#c7e2b2] text-xs font-extrabold text-[#092532]">
-              {initials(admin?.name || "Admin")}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-extrabold text-white">{admin?.name || "Veloir Admin"}</p>
-              <p className="truncate text-[10px] text-white/45">{admin?.email || "Administrator"}</p>
-            </div>
-            <span className="rounded-md border border-[#89c9b8]/30 px-1.5 py-1 text-[9px] font-extrabold uppercase tracking-wide text-[#89c9b8]">
-              Admin
-            </span>
-          </div>
-        </div>
-      </aside>
-    </>
-  );
-}
-
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [admin] = useState(() => readStoredAdmin());
+  const { admin } = useAdminAuth();
 
   const loadDashboard = useCallback(async (signal, isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -555,62 +420,14 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f4f7f3] text-[#092532]">
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} admin={admin} />
-
-      <div className="min-h-screen lg:pl-[270px]">
-        <header className="sticky top-0 z-20 flex h-[74px] items-center justify-between border-b border-[#e5ece6] bg-white/90 px-4 backdrop-blur-xl sm:px-6 xl:px-9">
-          <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#e2eae3] bg-white text-[#092532] transition hover:bg-[#f3f8f3] lg:hidden"
-            >
-              <Menu size={19} />
-            </button>
-            <div className="min-w-0">
-              <p className="truncate text-[10px] font-extrabold uppercase tracking-[1.5px] text-[#688079]">Veloir / Admin</p>
-              <p className="mt-0.5 truncate text-sm font-extrabold text-[#092532]">Dashboard overview</p>
-            </div>
-          </div>
-
-          <div className="ml-3 flex shrink-0 items-center gap-2 sm:gap-3">
-            <div className="hidden items-center gap-2 rounded-xl bg-[#f5f8f4] px-3 py-2 text-[11px] font-bold text-[#667b7e] md:flex">
-              <CalendarDays size={14} className="text-[#4c7d70]" />
-              {todayLabel}
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate("/admin/document-review")}
-              aria-label="Open pending document reviews"
-              title="Document review queue"
-              className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#e5ece6] bg-white text-[#49645e] transition hover:bg-[#f3f8f3]"
-            >
-              <Bell size={17} />
-              {Number(metrics.pendingManualReviews) > 0 ? (
-                <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-[#d56a54]" />
-              ) : null}
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              disabled={refreshing || loading}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#092532] px-3.5 text-xs font-extrabold text-white transition hover:bg-[#174352] disabled:cursor-not-allowed disabled:opacity-60 sm:px-4"
-            >
-              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
-          </div>
-        </header>
-
+    <div className="text-[#092532]">
         <main className="mx-auto max-w-[1600px] px-4 pb-10 pt-7 sm:px-6 sm:pt-8 xl:px-9">
           <div className="mb-7 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce9df] bg-white px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[1.1px] text-[#52766a]">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#dce9df] bg-white px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#52766a]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#4c9b72]" /> Live marketplace overview
               </div>
-              <h1 className="text-[28px] font-extrabold leading-tight tracking-[-1.5px] text-[#092532] sm:text-[34px]">
+              <h1 className="text-[28px] font-extrabold leading-tight text-[#092532] sm:text-[34px]">
                 {greeting}, {admin?.name?.split(" ")?.[0] || "Admin"}
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#71817f]">
@@ -618,7 +435,35 @@ export default function AdminDashboardPage() {
               </p>
             </div>
 
-            <div className="flex w-full items-center gap-2 rounded-xl border border-[#e3ebe4] bg-white px-3.5 py-2.5 shadow-sm sm:max-w-[340px]">
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="hidden items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-[#667b7e] md:flex">
+                <CalendarDays size={14} className="text-[#4c7d70]" />
+                {todayLabel}
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/admin/document-review")}
+                aria-label="Open pending document reviews"
+                title="Document review queue"
+                className="relative grid h-10 w-10 place-items-center rounded-xl border border-[#e5ece6] bg-white text-[#49645e] transition hover:bg-[#f3f8f3]"
+              >
+                <Bell size={17} />
+                {Number(metrics.pendingManualReviews) > 0 ? (
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-[#d56a54]" />
+                ) : null}
+              </button>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={refreshing || loading}
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#092532] px-4 text-[13px] font-semibold text-white transition hover:bg-[#174352] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+                Refresh
+              </button>
+            </div>
+            <div className="flex w-full items-center gap-2 rounded-xl border border-[#e3ebe4] bg-white px-3.5 py-2.5 shadow-sm sm:min-w-[320px]">
               <Search size={16} className="shrink-0 text-[#84938e]" />
               <input
                 value={searchTerm}
@@ -637,6 +482,7 @@ export default function AdminDashboardPage() {
                   <X size={13} />
                 </button>
               ) : null}
+            </div>
             </div>
           </div>
 
@@ -717,7 +563,7 @@ export default function AdminDashboardPage() {
                       <div>
                         <Activity className="mx-auto mb-2 text-[#9aaba4]" size={25} />
                         <p className="text-xs font-bold text-[#71817f]">No marketplace activity recorded yet</p>
-                        <p className="mt-1 text-[11px] text-[#9aa6a1]">Counts will appear as users interact with Veloir.</p>
+                        <p className="mt-1 text-xs text-[#9aa6a1]">Counts will appear as users interact with Veloir.</p>
                       </div>
                     </div>
                   )}
@@ -760,22 +606,22 @@ export default function AdminDashboardPage() {
                     ) : (
                       <div className="grid h-[220px] w-full max-w-[250px] place-items-center text-center">
                         <div className="grid h-36 w-36 place-items-center rounded-full border-[14px] border-[#edf3ed] text-center">
-                          <div><p className="text-2xl font-extrabold">0</p><p className="text-[10px] font-bold text-[#84938e]">Total bikes</p></div>
+                          <div><p className="text-2xl font-extrabold">0</p><p className="text-[11px] font-bold text-[#84938e]">Total bikes</p></div>
                         </div>
                       </div>
                     )}
                     <div className="grid w-full gap-3 sm:max-w-[150px]">
                       <div className="rounded-xl bg-[#f5f8f4] p-3.5">
-                        <div className="mb-1 flex items-center gap-2 text-[11px] font-bold text-[#6e8179]"><span className="h-2.5 w-2.5 rounded-full bg-[#092532]" /> Published</div>
+                        <div className="mb-1 flex items-center gap-2 text-xs font-bold text-[#6e8179]"><span className="h-2.5 w-2.5 rounded-full bg-[#092532]" /> Published</div>
                         <p className="text-2xl font-extrabold text-[#092532]">{formatNumber(metrics.approvedBikes)}</p>
                       </div>
                       <div className="rounded-xl bg-[#f5f8f4] p-3.5">
-                        <div className="mb-1 flex items-center gap-2 text-[11px] font-bold text-[#6e8179]"><span className="h-2.5 w-2.5 rounded-full bg-[#89c9b8]" /> Pending</div>
+                        <div className="mb-1 flex items-center gap-2 text-xs font-bold text-[#6e8179]"><span className="h-2.5 w-2.5 rounded-full bg-[#89c9b8]" /> Pending</div>
                         <p className="text-2xl font-extrabold text-[#092532]">{formatNumber(metrics.pendingBikes)}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-1 flex items-center justify-between border-t border-[#edf1ed] pt-4 text-[11px]">
+                  <div className="mt-1 flex items-center justify-between border-t border-[#edf1ed] pt-4 text-xs">
                     <span className="font-semibold text-[#82908c]">Total marketplace listings</span>
                     <span className="font-extrabold text-[#092532]">{formatNumber(metrics.totalBikes)}</span>
                   </div>
@@ -801,10 +647,10 @@ export default function AdminDashboardPage() {
                         <span className="min-w-0 flex-1">
                           <span className="flex flex-wrap items-center justify-between gap-2">
                             <span className="text-sm font-extrabold text-[#092532]">{item.title}</span>
-                            <span className="rounded-full bg-[#f1f5f1] px-2.5 py-1 text-[11px] font-extrabold text-[#49645e]">{formatNumber(item.count)}</span>
+                            <span className="rounded-full bg-[#f1f5f1] px-2.5 py-1 text-xs font-extrabold text-[#49645e]">{formatNumber(item.count)}</span>
                           </span>
                           <span className="mt-1.5 block text-xs leading-5 text-[#82908c]">{item.description}</span>
-                          <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-extrabold text-[#3d7669] group-hover:text-[#092532]">{item.action} <ArrowRight size={13} className="transition group-hover:translate-x-0.5" /></span>
+                          <span className="mt-3 inline-flex items-center gap-1 text-xs font-extrabold text-[#3d7669] group-hover:text-[#092532]">{item.action} <ArrowRight size={13} className="transition group-hover:translate-x-0.5" /></span>
                         </span>
                       </motion.button>
                     );
@@ -818,7 +664,7 @@ export default function AdminDashboardPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[560px] border-collapse text-left">
                       <thead>
-                        <tr className="border-b border-[#edf1ed] text-[10px] font-extrabold uppercase tracking-[1px] text-[#94a19b]">
+                        <tr className="border-b border-[#edf1ed] text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#94a19b]">
                           <th className="pb-3 pr-4">Bike</th>
                           <th className="pb-3 pr-4">Created</th>
                           <th className="pb-3 pr-4">Status</th>
@@ -830,12 +676,12 @@ export default function AdminDashboardPage() {
                           <tr key={bike._id || bike.id || `${bike.title}-${bike.createdAt}`} className="border-b border-[#f0f3ef] last:border-0">
                             <td className="py-4 pr-4">
                               <p className="max-w-[260px] truncate text-xs font-extrabold text-[#092532]">{bike.title || `${bike.brand || "Bike"} ${bike.model || ""}`.trim()}</p>
-                              <p className="mt-1 text-[10px] font-medium text-[#8a9992]">{[bike.brand, bike.model].filter(Boolean).join(" · ") || "Marketplace listing"}</p>
+                              <p className="mt-1 text-[11px] font-medium text-[#8a9992]">{[bike.brand, bike.model].filter(Boolean).join(" · ") || "Marketplace listing"}</p>
                             </td>
-                            <td className="py-4 pr-4 text-[11px] font-semibold text-[#71817f]">{formatDate(bike.createdAt)}</td>
+                            <td className="py-4 pr-4 text-xs font-semibold text-[#71817f]">{formatDate(bike.createdAt)}</td>
                             <td className="py-4 pr-4"><StatusPill approved={bike.isApproved === true} /></td>
                             <td className="py-4 text-right">
-                              <button type="button" onClick={() => navigate("/admin/listings")} className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#47786d] hover:text-[#092532]">Review <ChevronRight size={13} /></button>
+                              <button type="button" onClick={() => navigate("/admin/listings")} className="inline-flex items-center gap-1 text-xs font-extrabold text-[#47786d] hover:text-[#092532]">Review <ChevronRight size={13} /></button>
                             </td>
                           </tr>
                         )) : (
@@ -844,7 +690,7 @@ export default function AdminDashboardPage() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="mt-3 flex items-center justify-between border-t border-[#edf1ed] pt-4 text-[10px] font-semibold text-[#93a099]">
+                  <div className="mt-3 flex items-center justify-between border-t border-[#edf1ed] pt-4 text-[11px] font-semibold text-[#93a099]">
                     <span>Showing up to 5 most recent listings from the dashboard API</span>
                     <span>{filteredBikes.length} shown</span>
                   </div>
@@ -855,28 +701,28 @@ export default function AdminDashboardPage() {
                   <div className="space-y-1">
                     {filteredUsers.length ? filteredUsers.map((user) => (
                       <div key={user._id || user.id || user.email} className="flex items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-[#f7faf6]">
-                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e9f3e8] text-[11px] font-extrabold text-[#426f5e]">{initials(user.name || user.email || "User")}</div>
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e9f3e8] text-xs font-extrabold text-[#426f5e]">{initials(user.name || user.email || "User")}</div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-extrabold text-[#092532]">{user.name || "Veloir member"}</p>
-                          <p className="mt-1 truncate text-[10px] font-medium text-[#8a9992]">{user.email || "Email unavailable"}</p>
+                          <p className="mt-1 truncate text-[11px] font-medium text-[#8a9992]">{user.email || "Email unavailable"}</p>
                         </div>
                         <div className="shrink-0 text-right">
-                          <p className="text-[9px] font-extrabold uppercase tracking-wide text-[#6c877c]">{user.role || "user"}</p>
-                          <p className="mt-1 text-[9px] font-medium text-[#a0aaa5]">{formatDate(user.createdAt)}</p>
+                          <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#6c877c]">{user.role || "user"}</p>
+                          <p className="mt-1 text-[11px] font-medium text-[#a0aaa5]">{formatDate(user.createdAt)}</p>
                         </div>
                       </div>
                     )) : (
                       <div className="py-10 text-center text-xs font-semibold text-[#8b9993]">{searchTerm ? "No recent users match your search." : "No user registrations available yet."}</div>
                     )}
                   </div>
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f8f4] p-3 text-[10px] leading-5 text-[#71817f]">
+                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f8f4] p-3 text-[11px] leading-5 text-[#71817f]">
                     <Users size={15} className="shrink-0 text-[#5d8173]" />
                     <span>The dashboard API currently returns the five newest user records.</span>
                   </div>
                 </div>
               </section>
 
-              <footer className="mt-8 flex flex-col justify-between gap-2 border-t border-[#e2eae3] pt-5 text-[10px] font-medium text-[#96a39c] sm:flex-row sm:items-center">
+              <footer className="mt-8 flex flex-col justify-between gap-2 border-t border-[#e2eae3] pt-5 text-[11px] font-medium text-[#96a39c] sm:flex-row sm:items-center">
                 <span>© {new Date().getFullYear()} Veloir Admin Console</span>
                 <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#4d9a71]" /> Data loaded from your Veloir backend{dashboard.generatedAt ? ` · Updated ${formatDate(dashboard.generatedAt)}` : ""}</span>
               </footer>
@@ -890,7 +736,6 @@ export default function AdminDashboardPage() {
             </div>
           )}
         </main>
-      </div>
     </div>
   );
 }

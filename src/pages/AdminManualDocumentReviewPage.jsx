@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { FiCheckCircle, FiClock, FiFileText, FiRefreshCw, FiShield, FiXCircle } from "react-icons/fi";
-import Layout from "../components/Layout";
+import { useAdminUI } from "../admin/AdminUIProvider";
 import {
   getPendingManualDocumentSubmissions,
   reviewManualDocumentSubmission,
@@ -10,6 +10,7 @@ import "./AdminManualDocumentReviewPage.css";
 const display = (value) => value === undefined || value === null || value === "" ? "—" : String(value);
 
 export default function AdminManualDocumentReviewPage() {
+  const { confirm, toast } = useAdminUI();
   const [submissions, setSubmissions] = useState([]);
   const [notes, setNotes] = useState({});
   const [loading, setLoading] = useState(true);
@@ -34,10 +35,22 @@ export default function AdminManualDocumentReviewPage() {
 
   const decide = async (submission, decision) => {
     const action = decision === "verified" ? "approve" : "reject";
-    const message = decision === "verified"
-      ? "Approve this manual document submission? This records an administrator review; it does not authenticate government records."
-      : "Reject this submission? The user will need to correct their details and submit again.";
-    if (!window.confirm(message)) return;
+    const approving = decision === "verified";
+    const confirmed = await confirm(
+      approving
+        ? {
+            title: "Approve this submission?",
+            message: "This records an administrator review; it does not authenticate government records.",
+            confirmLabel: "Approve submission",
+          }
+        : {
+            title: "Reject this submission?",
+            message: "The user will need to correct their details and submit again.",
+            confirmLabel: "Reject submission",
+            tone: "danger",
+          }
+    );
+    if (!confirmed) return;
 
     setBusyId(submission.id);
     setError("");
@@ -47,17 +60,21 @@ export default function AdminManualDocumentReviewPage() {
         decision,
         reviewNotes: notes[submission.id] || "",
       });
-      setNotice(response?.message || `Submission ${decision === "verified" ? "approved" : "rejected"}.`);
+      const successMessage = response?.message || `Submission ${decision === "verified" ? "approved" : "rejected"}.`;
+      setNotice(successMessage);
+      toast.success(successMessage);
       setSubmissions((current) => current.filter((item) => item.id !== submission.id));
     } catch (err) {
-      setError(err?.message || `Unable to ${action} this submission.`);
+      const failureMessage = err?.message || `Unable to ${action} this submission.`;
+      setError(failureMessage);
+      toast.error(failureMessage);
     } finally {
       setBusyId("");
     }
   };
 
   return (
-    <Layout>
+    <>
       <main className="manual-review-page wrap">
         <header className="manual-review-header">
           <div>
@@ -150,6 +167,6 @@ export default function AdminManualDocumentReviewPage() {
           </section>
         )}
       </main>
-    </Layout>
+    </>
   );
 }

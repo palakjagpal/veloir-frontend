@@ -23,6 +23,7 @@ import AdminListingsPage from "./pages/AdminListingsPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminRegisterPage from "./pages/AdminRegisterPage";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import AdminLayout from "./admin/AdminLayout";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 
 import {
@@ -45,10 +46,6 @@ import AdminRentalDisputesPage from "./pages/rentals/AdminRentalDisputesPage";
 // Small helper to keep the route table readable.
 const guard = (element, roles) => (
   <ProtectedRoute roles={roles}>{element}</ProtectedRoute>
-);
-
-const adminGuard = (element) => (
-  <AdminProtectedRoute>{element}</AdminProtectedRoute>
 );
 
 export default function App() {
@@ -78,10 +75,15 @@ export default function App() {
         <Route path="/bikes/create" element={guard(<CreateBikeListingPage />)} />
         <Route path="/bikes/:id/edit" element={guard(<EditBikeListingPage />)} />
         <Route path="/my-bikes" element={guard(<MyBikesPage />)} />
-        <Route path="/admin" element={adminGuard(<AdminDashboardPage />)} />
-        <Route path="/admin/listings" element={adminGuard(<AdminListingsPage />)} />
-        <Route path="/admin/rentals/disputes" element={adminGuard(<AdminRentalDisputesPage />)} />
-        <Route path="/admin/document-review" element={adminGuard(<AdminManualDocumentReviewPage />)} />
+
+        {/* Admin panel: guarded once, rendered inside its own isolated shell
+            (no user navbar/footer). Paths are unchanged. */}
+        <Route element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/listings" element={<AdminListingsPage />} />
+          <Route path="/admin/rentals/disputes" element={<AdminRentalDisputesPage />} />
+          <Route path="/admin/document-review" element={<AdminManualDocumentReviewPage />} />
+        </Route>
 
         {/* Deals*/}
         <Route path="/deals" element={guard(<DealsPage />)} />

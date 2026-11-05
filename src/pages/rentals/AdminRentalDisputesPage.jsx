@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import Layout from "../../components/Layout";
 import { formatPrice } from "../../lib/api";
 import {
   getRentalDisputes,
   resolveRentalDispute,
 } from "../../services/rentalService";
-import toast from "react-hot-toast";
+import { useAdminUI } from "../../admin/AdminUIProvider";
 import "../../components/rentals/rental.css";
 
 const dateText = (value) =>
   value ? new Date(value).toISOString().slice(0, 10) : "—";
 export default function AdminRentalDisputesPage() {
+  const { confirm, toast } = useAdminUI();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,12 +53,17 @@ export default function AdminRentalDisputesPage() {
       depositAmount: "",
       note: "",
     };
-    if (
-      !window.confirm(
-        `Record admin resolution “${form.decision}” for ${item.bookingCode}?`,
-      )
-    )
-      return;
+    const decisionLabels = {
+      no_refund: "no rental-charge refund",
+      refund_full: "a full rental-charge refund (sandbox)",
+      refund_partial: "a partial rental-charge refund (sandbox)",
+    };
+    const confirmed = await confirm({
+      title: "Record this resolution?",
+      message: `Record ${decisionLabels[form.decision] || form.decision} for booking ${item.bookingCode}. This will be saved to the dispute's audit trail.`,
+      confirmLabel: "Record resolution",
+    });
+    if (!confirmed) return;
     setBusy(item._id);
     setError("");
     try {
@@ -80,7 +85,7 @@ export default function AdminRentalDisputesPage() {
     }
   };
   return (
-    <Layout>
+    <>
       <main className="wrap vr-page">
         <p className="vr-eyebrow">ADMIN TOOLS</p>
         <h1>Rental disputes & refunds</h1>
@@ -259,6 +264,6 @@ export default function AdminRentalDisputesPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </>
   );
 }
