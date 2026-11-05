@@ -23,6 +23,7 @@ import AdminListingsPage from "./pages/AdminListingsPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminRegisterPage from "./pages/AdminRegisterPage";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
 
 import {
   DealsPage,
@@ -53,6 +54,7 @@ const adminGuard = (element) => (
 export default function App() {
   return (
     <AuthProvider>
+      <AdminAuthProvider>
       <ScrollToTop />
       <Routes>
         {/* Public */}
@@ -97,13 +99,11 @@ export default function App() {
         <Route path="/rentals/:id/checkout" element={guard(<RentalCheckoutPage />)} />
         <Route path="/rentals/:id" element={guard(<RentalDetailPage />)} />
         <Route path="/rental-management" element={guard(<OwnerRentalManagementPage />)} />
-        <Route path="/admin" element={guard(<AdminDashboardPage />, ["admin"])} />
-        <Route path="/admin/listings" element={guard(<AdminListingsPage />, ["admin"])} />
-        <Route path="/admin/rentals/disputes" element={guard(<AdminRentalDisputesPage />, ["admin"])} />
-        <Route path="/admin/document-review" element={guard(<AdminManualDocumentReviewPage />, ["admin"])} />
+
 
         <Route path="*" element={<HomePage />} />
       </Routes>
+      </AdminAuthProvider>
     </AuthProvider>
   );
 }

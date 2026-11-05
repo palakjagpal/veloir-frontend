@@ -1,25 +1,72 @@
-import { Navigate } from "react-router-dom";
 
-function readJson(key) {
-  try {
-    return JSON.parse(window.localStorage.getItem(key) || "null");
-  } catch {
-    return null;
-  }
-}
+import { Navigate, useLocation } from "react-router-dom";
+import { useAdminAuth } from "../context/AdminAuthContext";
 
-/**
- * Client-side navigation gate for admin pages. It checks that the current
- * shared session is the admin session, not just that an old admin token exists.
- * The backend independently verifies the signed admin JWT on every API.
- */
 export default function AdminProtectedRoute({ children }) {
-  const adminToken = window.localStorage.getItem("veloirAdminToken");
-  const currentToken = window.localStorage.getItem("token");
-  const currentUser = readJson("user");
-  const isCurrentAdminSession = Boolean(
-    adminToken && currentToken === adminToken && currentUser?.accountType === "admin"
-  );
+  const location = useLocation();
 
-  return isCurrentAdminSession ? children : <Navigate to="/admin/login" replace />;
+  const {
+    status,
+    isAuthenticated,
+    authError,
+    verifyAdminSession,
+  } = useAdminAuth();
+
+  // Wait until the saved token has been checked.
+  if (status === "checking") {
+    return (
+      <div
+        role="status"
+        style={{
+          minHeight: "70vh",
+          display: "grid",
+          placeItems: "center",
+          color: "#092532",
+          fontWeight: 600,
+        }}
+      >
+        Verifying administrator session...
+      </div>
+    );
+  }
+
+  // Do not redirect to login just because the backend
+  // temporarily cannot be reached.
+  if (status === "error") {
+    return (
+      <div
+        role="alert"
+        style={{
+          minHeight: "70vh",
+          display: "grid",
+          placeContent: "center",
+          textAlign: "center",
+          gap: "14px",
+          padding: "24px",
+        }}
+      >
+        <p>{authError}</p>
+
+        <button
+          type="button"
+          onClick={() => verifyAdminSession()}
+        >
+          Retry authentication
+        </button>
+      </div>
+    );
+  }
+
+  // Redirect only when there is no valid administrator session.
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/admin/login"
+        replace
+        state={{ from: location }}
+      />
+    );
+  }
+
+  return children;
 }
