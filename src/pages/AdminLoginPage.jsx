@@ -40,9 +40,10 @@ async function postJson(path, body) {
 function storeAdminSession(token, user) {
   // The existing application uses a shared JWT session. These conventional keys
   // are also supported by the supplied AdminDashboardPage token reader.
-  const safeUser = { ...user, role: "admin" };
+  const safeUser = { ...user, isAdmin: true, accountType: "admin" };
   const session = { token, user: safeUser, isAuthenticated: true };
 
+  window.localStorage.setItem("veloirAdminToken", token);
   window.localStorage.setItem("token", token);
   window.localStorage.setItem("user", JSON.stringify(safeUser));
   window.localStorage.setItem("userInfo", JSON.stringify(safeUser));
@@ -57,7 +58,7 @@ function formatTime(seconds) {
 
 export default function AdminLoginPage() {
   const [step, setStep] = useState("credentials");
-  const [email, setEmail] = useState("veloir.inn@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState("");
@@ -114,7 +115,7 @@ export default function AdminLoginPage() {
     setError("");
     try {
       const payload = await postJson("/admin-auth/verify-otp", { challengeId, otp });
-      if (!payload.token || payload.user?.role !== "admin") {
+      if (!payload.token || payload.user?.isAdmin !== true) {
         throw new Error("The server did not return a valid administrator session.");
       }
 
@@ -197,7 +198,7 @@ export default function AdminLoginPage() {
                 <h2 className="text-3xl font-extrabold tracking-tight sm:text-[35px]">{heading}</h2>
                 <p className="mt-3 max-w-md text-sm leading-6 text-[#71817d]">
                   {step === "credentials"
-                    ? "Sign in with the dedicated Veloir administrator account. A verification code will be sent to the admin inbox."
+                    ? "Sign in with the dedicated Veloir administrator account. A verification code will be sent to your registered administrator email."
                     : `Enter the six-digit code sent to ${maskedEmail}. It expires in five minutes.`}
                 </p>
               </div>
@@ -305,7 +306,8 @@ export default function AdminLoginPage() {
             <Link to="/login" className="inline-flex items-center gap-2 text-xs font-bold text-[#668078] transition hover:text-[#092532]">
               <ArrowLeft size={14} /> Return to customer login
             </Link>
-            <p className="mt-4 text-[10px] leading-5 text-[#98a6a1]">Administrator access is restricted to the designated Veloir admin account.</p>
+            <p className="mt-4 text-[10px] leading-5 text-[#98a6a1]">Only accounts created in the separate administrator collection can access this portal. Customer accounts cannot use administrator sessions.</p>
+            <Link to="/admin/register" className="mt-4 inline-flex items-center gap-2 text-xs font-extrabold text-[#315e53] transition hover:text-[#092532]">Create an administrator account <ArrowRight size={14} /></Link>
           </div>
         </section>
       </div>
