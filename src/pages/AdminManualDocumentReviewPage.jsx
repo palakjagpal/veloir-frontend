@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { FiCheckCircle, FiClock, FiFileText, FiRefreshCw, FiXCircle } from "react-icons/fi";
+import { FiCheckCircle, FiClock, FiFileText, FiRefreshCw, FiShield, FiXCircle } from "react-icons/fi";
 import Layout from "../components/Layout";
 import {
   getPendingManualDocumentSubmissions,
