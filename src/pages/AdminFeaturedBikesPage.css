@@ -42,3 +42,25 @@
   .adm-featured-stat-wide { grid-column: 1 / -1; }
   .adm-featured-grid { grid-template-columns: 1fr; }
 }
+
+.adm-featured-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.adm-featured-picker { margin-bottom: 22px; padding: 18px; background: var(--adm-card); border: 1px solid var(--adm-line); border-radius: 18px; }
+.adm-featured-picker-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.adm-featured-picker-head h2 { margin: 0; font-size: 17px; }
+.adm-featured-picker-head p { margin: 4px 0 0; color: var(--adm-muted); font-size: 13px; }
+.adm-featured-search { display: flex; align-items: center; gap: 8px; margin: 14px 0; padding: 0 12px; border: 1px solid #cfdcd8; border-radius: 11px; background: #fff; color: var(--adm-muted); }
+.adm-featured-search input { flex: 1; min-width: 0; padding: 10px 0; border: 0; outline: 0; background: transparent; font-size: 14px; color: var(--adm-ink); }
+.adm-featured-search:focus-within { border-color: var(--adm-mint); box-shadow: 0 0 0 3px #89c9b855; }
+.adm-featured-picker-list { list-style: none; margin: 0; padding: 0; max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.adm-featured-picker-list li { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--adm-line); border-radius: 12px; }
+.adm-featured-picker-thumb { flex: 0 0 56px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 8px; overflow: hidden; background: #edf4f1; color: #71928a; }
+.adm-featured-picker-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.adm-featured-picker-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.adm-featured-picker-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-featured-picker-info span { font-size: 12px; color: var(--adm-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-featured-picker-empty { margin: 8px 0; color: var(--adm-muted); text-align: center; padding: 18px 0; }
+@media (max-width: 720px) {
+  .adm-featured-picker-list li { flex-wrap: wrap; }
+  .adm-featured-picker-info { flex-basis: calc(100% - 70px); }
+  .adm-featured-picker-list li .adm-btn { width: 100%; justify-content: center; }
+}

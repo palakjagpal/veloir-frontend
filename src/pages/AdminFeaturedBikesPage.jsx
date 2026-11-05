@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Star, RefreshCw, StarOff, Eye, EyeOff } from "lucide-react";
+import { Star, RefreshCw, StarOff, Eye, EyeOff, Plus, Search, X } from "lucide-react";
 import { useAdminUI } from "../admin/AdminUIProvider";
 import { StatusBadge } from "../admin/StatusFilter";
 import { api, getImageUrl } from "../lib/api";
@@ -23,6 +23,10 @@ export default function AdminFeaturedBikesPage() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [candidates, setCandidates] = useState([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +44,40 @@ export default function AdminFeaturedBikesPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Approved listings that do not hold a slot yet: the admin chooses which ones to feature.
+  const loadCandidates = useCallback(async () => {
+    setPickerLoading(true);
+    try {
+      const response = await api("/api/admin/bikes?status=approved&page=1&limit=100");
+      const list = Array.isArray(response?.data) ? response.data : [];
+      setCandidates(list.filter((bike) => !bike.isFeatured));
+    } catch (err) {
+      toast.error(err?.message || "Unable to load approved listings.");
+    } finally {
+      setPickerLoading(false);
+    }
+  }, [toast]);
+
+  const openPicker = () => {
+    setPickerOpen(true);
+    setQuery("");
+    loadCandidates();
+  };
+
+  const feature = async (bike) => {
+    setBusyId(bike._id);
+    try {
+      const response = await api(`/api/admin/bikes/${bike._id}/featured`, { method: "PUT", body: JSON.stringify({ featured: true }) });
+      toast.success(response?.message || "Bike is now featured.");
+      setCandidates((current) => current.filter((item) => item._id !== bike._id));
+      await load();
+    } catch (err) {
+      toast.error(err?.message || "Could not feature this bike.", "Featured not updated");
+    } finally {
+      setBusyId("");
+    }
+  };
+
   const unfeature = async (bike) => {
     const confirmed = await confirm({
       title: "Remove from featured?",
@@ -50,7 +88,7 @@ export default function AdminFeaturedBikesPage() {
     if (!confirmed) return;
     setBusyId(bike._id);
     try {
-      const response = await api(`/api/admin/bikes/${bike._id}/unfeature`, { method: "PUT", body: JSON.stringify({}) });
+      const response = await api(`/api/admin/bikes/${bike._id}/featured`, { method: "PUT", body: JSON.stringify({ featured: false }) });
       toast.success(response?.message || "Bike removed from featured listings.");
       await load();
     } catch (err) {
@@ -72,10 +110,59 @@ export default function AdminFeaturedBikesPage() {
           <h1>Featured bikes</h1>
           <p>Bikes currently marked as featured. Only approved, available bikes appear on the public site.</p>
         </div>
-        <button type="button" className="adm-btn adm-btn-ghost" onClick={load} disabled={loading}>
-          <RefreshCw size={15} className={loading ? "adm-featured-spin" : ""} /> Refresh
-        </button>
+        <div className="adm-featured-header-actions">
+          <button type="button" className="adm-btn adm-btn-ghost" onClick={load} disabled={loading}>
+            <RefreshCw size={15} className={loading ? "adm-featured-spin" : ""} /> Refresh
+          </button>
+          <button type="button" className="adm-btn adm-btn-primary" onClick={openPicker} disabled={loading || stats.remainingSlots <= 0} title={stats.remainingSlots <= 0 ? "All featured slots are in use" : undefined}>
+            <Plus size={15} /> Add bike
+          </button>
+        </div>
       </header>
+
+      {pickerOpen && (
+        <section className="adm-featured-picker" aria-label="Choose a listing to feature">
+          <div className="adm-featured-picker-head">
+            <div>
+              <h2>Choose a listing to feature</h2>
+              <p>Approved listings submitted by users. {stats.remainingSlots} slot{stats.remainingSlots === 1 ? "" : "s"} left.</p>
+            </div>
+            <button type="button" className="adm-icon-btn" aria-label="Close picker" onClick={() => setPickerOpen(false)}><X size={18} /></button>
+          </div>
+          <label className="adm-featured-search">
+            <Search size={15} />
+            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by title, brand, model or seller" aria-label="Search approved listings" />
+          </label>
+          {pickerLoading ? (
+            <p className="adm-featured-picker-empty" role="status">Loading approved listings…</p>
+          ) : (() => {
+            const needle = query.trim().toLowerCase();
+            const shown = needle
+              ? candidates.filter((bike) => [bike.title, bike.brand, bike.model, bike.seller?.name].filter(Boolean).join(" ").toLowerCase().includes(needle))
+              : candidates;
+            return shown.length === 0 ? (
+              <p className="adm-featured-picker-empty">{candidates.length === 0 ? "No approved listings are available to feature." : "No listings match your search."}</p>
+            ) : (
+              <ul className="adm-featured-picker-list">
+                {shown.map((bike) => (
+                  <li key={bike._id}>
+                    <div className="adm-featured-picker-thumb">
+                      {(bike.featuredImage || bike.images?.[0]) ? <img src={getImageUrl(bike.featuredImage || bike.images[0])} alt="" loading="lazy" /> : <Star size={18} />}
+                    </div>
+                    <div className="adm-featured-picker-info">
+                      <strong>{bike.title}</strong>
+                      <span>{[bike.brand, bike.model, bike.year].filter(Boolean).join(" · ")} · {formatPrice(bike.price)} · {bike.seller?.name || "Unknown seller"}</span>
+                    </div>
+                    <button type="button" className="adm-btn adm-btn-primary" disabled={Boolean(busyId) || stats.remainingSlots <= 0} onClick={() => feature(bike)}>
+                      <Star size={14} /> {busyId === bike._id ? "Saving…" : "Feature"}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            );
+          })()}
+        </section>
+      )}
 
       {error && <div className="adm-featured-error" role="alert">{error}<button type="button" onClick={load}>Retry</button></div>}
 
@@ -111,7 +198,7 @@ export default function AdminFeaturedBikesPage() {
         <div className="adm-featured-empty">
           <StarOff size={26} />
           <strong>No featured bikes</strong>
-          <span>No bikes are currently marked as featured.</span>
+          <span>Use “Add bike” to choose from approved listings.</span>
         </div>
       ) : (
         <ul className="adm-featured-grid">

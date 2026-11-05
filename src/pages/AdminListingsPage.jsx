@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiArrowLeft, FiTag, FiCheckCircle, FiRefreshCw, FiXCircle } from "react-icons/fi";
+import { FiArrowLeft, FiTag, FiCheckCircle, FiRefreshCw, FiStar, FiXCircle } from "react-icons/fi";
 import { useAdminUI } from "../admin/AdminUIProvider";
 import { StatusBadge, StatusFilter } from "../admin/StatusFilter";
 import { api, getImageUrl } from "../lib/api";
@@ -28,6 +28,7 @@ export default function AdminListingsPage() {
   const [status, setStatus] = useState("pending");
   const [bikes, setBikes] = useState([]);
   const [counts, setCounts] = useState({});
+  const [featured, setFeatured] = useState({ total: 0, max: 0 });
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
@@ -43,6 +44,7 @@ export default function AdminListingsPage() {
       if (requestId !== requestRef.current) return; // a newer tab selection superseded this response
       setBikes(Array.isArray(response?.data) ? response.data : []);
       setCounts(response?.counts || {});
+      if (response?.featured) setFeatured(response.featured);
     } catch (err) {
       if (requestId !== requestRef.current) return;
       setError(err?.message || "Unable to load bike listings.");
@@ -84,6 +86,34 @@ export default function AdminListingsPage() {
     }
   };
 
+  const toggleFeatured = async (bike) => {
+    const removing = bike.isFeatured === true;
+    if (removing) {
+      const confirmed = await confirm({
+        title: "Unfeature this bike?",
+        message: `“${bike.title}” will no longer be featured and will free up a slot. The listing itself is not affected.`,
+        confirmLabel: "Unfeature bike",
+        tone: "danger",
+      });
+      if (!confirmed) return;
+    }
+    setBusyId(bike._id);
+    try {
+      const response = await api(`/api/admin/bikes/${bike._id}/${removing ? "unfeature" : "feature"}`, {
+        method: "PUT",
+        body: JSON.stringify({}),
+      });
+      toast.success(response?.message || (removing ? "Bike unfeatured." : "Bike featured."));
+      await load();
+    } catch (err) {
+      toast.error(err?.message || `Could not ${removing ? "unfeature" : "feature"} this bike.`);
+    } finally {
+      setBusyId("");
+    }
+  };
+
+  const slotsFull = featured.max > 0 && featured.total >= featured.max;
+
   const options = FILTERS.map((filter) => ({ ...filter, count: counts[filter.value] }));
   const activeLabel = FILTERS.find((filter) => filter.value === status)?.label;
 
@@ -100,6 +130,13 @@ export default function AdminListingsPage() {
           <FiRefreshCw /> Refresh
         </button>
       </div>
+
+      {featured.max > 0 && (
+        <p className="admin-listings-slots" role="status">
+          <FiStar /> Featured slots used: <strong>{featured.total} / {featured.max}</strong>
+          {slotsFull && " — remove a featured bike to add another"}
+        </p>
+      )}
 
       <StatusFilter options={options} value={status} onChange={setStatus} label="Filter bike listings by approval status" />
 
@@ -118,6 +155,8 @@ export default function AdminListingsPage() {
           {bikes.map((bike) => {
             const approval = bike.approvalStatus || (bike.isApproved ? "approved" : "pending");
             const busy = busyId === bike._id;
+            // Same rule the server enforces: only live (approved, available) listings can be featured.
+            const eligible = approval === "approved" && bike.isAvailable === true && bike.status === "available";
             return (
               <article className="admin-listing-card" key={bike._id}>
                 <div className="admin-listing-image">
@@ -126,7 +165,10 @@ export default function AdminListingsPage() {
                     : <FiTag />}
                 </div>
                 <div className="admin-listing-body">
-                  <StatusBadge status={approval} />
+                  <div className="admin-listing-badges">
+                    <StatusBadge status={approval} />
+                    {bike.isFeatured && <span className="admin-listing-featured"><FiStar /> Featured</span>}
+                  </div>
                   <h2>{bike.title}</h2>
                   <p className="admin-listing-subtitle">{[bike.brand, bike.model, bike.year].filter(Boolean).join(" · ")}</p>
                   <div className="admin-listing-meta">
@@ -147,6 +189,22 @@ export default function AdminListingsPage() {
                     {approval !== "rejected" && (
                       <button type="button" className="admin-listing-reject" disabled={Boolean(busyId)} onClick={() => decide(bike, "reject")}>
                         <FiXCircle /> {busy ? "Saving…" : "Reject"}
+                      </button>
+                    )}
+                    {bike.isFeatured && (
+                      <button type="button" className="admin-listing-feature is-featured" disabled={Boolean(busyId)} onClick={() => toggleFeatured(bike)}>
+                        <FiStar /> {busy ? "Saving…" : "Unfeature Bike"}
+                      </button>
+                    )}
+                    {!bike.isFeatured && eligible && (
+                      <button
+                        type="button"
+                        className="admin-listing-feature"
+                        disabled={Boolean(busyId) || slotsFull}
+                        title={slotsFull ? `All ${featured.max} featured slots are in use` : undefined}
+                        onClick={() => toggleFeatured(bike)}
+                      >
+                        <FiStar /> {busy ? "Saving…" : "Feature Bike"}
                       </button>
                     )}
                     {approval !== "approved" && (
