@@ -137,7 +137,7 @@ function isAdminEndpoint(path, method = "GET") {
   const p = String(path || "").split("?")[0];
   if (p.startsWith("/api/admin/") || p === "/api/admin") return true;
   if (p.startsWith("/api/rentals/admin/")) return true;
-  if (p === "/api/kyc/manual-submissions/pending") return true;
+  if (p === "/api/kyc/manual-submissions" || p === "/api/kyc/manual-submissions/pending") return true;
   if (/^\/api\/kyc\/manual-submissions\/[^/]+\/review$/.test(p)) return true;
   return false;
 }
