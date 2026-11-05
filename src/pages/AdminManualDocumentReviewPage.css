@@ -246,3 +246,17 @@
     grid-template-columns: minmax(90px, 0.75fr) minmax(0, 1.25fr);
   }
 }
+
+.manual-review-record {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 1rem;
+  border: 1px solid #e3ebe5;
+  border-radius: 0.7rem;
+  padding: 0.8rem 1rem;
+  background: #f8fbfa;
+  color: #36505a;
+  line-height: 1.5;
+}
+.manual-review-record strong { color: #092532; }

@@ -1,0 +1,44 @@
+.adm-featured-page { max-width: 1360px; margin: 0 auto; padding: 8px 0 48px; }
+.adm-featured-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 22px; }
+.adm-featured-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; color: #39786d; }
+.adm-featured-header h1 { margin: 0; }
+.adm-featured-header p { margin: 8px 0 0; color: var(--adm-muted); max-width: 640px; }
+.adm-featured-error { display: flex; justify-content: space-between; gap: 12px; padding: 13px 15px; margin-bottom: 18px; border: 1px solid #fecaca; background: #fff1f2; color: #9f1239; border-radius: 12px; }
+.adm-featured-error button { border: 0; background: transparent; text-decoration: underline; font-weight: 800; color: inherit; cursor: pointer; }
+
+.adm-featured-stats { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+.adm-featured-stat { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; background: var(--adm-card); border: 1px solid var(--adm-line); border-radius: 16px; }
+.adm-featured-stat-label { font-size: 12px; font-weight: 700; color: var(--adm-muted); }
+.adm-featured-stat strong { font-size: 28px; line-height: 1.1; color: var(--adm-ink); }
+.adm-featured-meter { height: 8px; margin-top: 4px; border-radius: 999px; background: #e8f0ec; overflow: hidden; }
+.adm-featured-meter span { display: block; height: 100%; border-radius: inherit; background: var(--adm-mint); transition: width .3s ease; }
+.adm-featured-meter.is-full span { background: #d98a1d; }
+.adm-featured-hint { font-size: 12px; color: #a62d22; font-weight: 700; }
+
+.adm-featured-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+.adm-featured-card { display: flex; flex-direction: column; overflow: hidden; background: var(--adm-card); border: 1px solid var(--adm-line); border-radius: 18px; box-shadow: 0 5px 18px #09253208; }
+.adm-featured-image { display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 10; background: #edf4f1; color: #71928a; }
+.adm-featured-image img { width: 100%; height: 100%; object-fit: cover; }
+.adm-featured-body { display: flex; flex-direction: column; flex: 1; padding: 16px; }
+.adm-featured-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.adm-featured-live { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--adm-muted); }
+.adm-featured-live.is-live { color: #1f7a3d; }
+.adm-featured-body h2 { margin: 12px 0 4px; font-size: 17px; }
+.adm-featured-sub { margin: 0; font-size: 12px; color: var(--adm-muted); }
+.adm-featured-meta { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; font-size: 12.5px; color: var(--adm-muted); }
+.adm-featured-meta strong { color: var(--adm-ink); font-size: 14px; white-space: nowrap; }
+.adm-featured-seller { margin: 8px 0 0; font-size: 12px; color: var(--adm-muted); overflow-wrap: anywhere; }
+.adm-featured-reason { margin: 10px 0 0; padding: 8px 10px; border-radius: 9px; background: #fff4dc; color: #875f11; font-size: 12px; }
+.adm-featured-remove { margin-top: auto; align-self: stretch; justify-content: center; }
+.adm-featured-body > .adm-featured-remove { margin-top: 16px; }
+.adm-featured-empty { display: flex; min-height: 200px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border: 1px dashed #d4e4df; border-radius: 18px; color: var(--adm-muted); text-align: center; padding: 20px; }
+.adm-featured-empty strong { font-size: 16px; color: var(--adm-ink); }
+.adm-featured-spin { animation: adm-featured-rot 1s linear infinite; }
+@keyframes adm-featured-rot { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .adm-featured-spin { animation: none; } .adm-featured-meter span { transition: none; } }
+@media (max-width: 720px) {
+  .adm-featured-header { flex-direction: column; }
+  .adm-featured-stats { grid-template-columns: 1fr 1fr; }
+  .adm-featured-stat-wide { grid-column: 1 / -1; }
+  .adm-featured-grid { grid-template-columns: 1fr; }
+}

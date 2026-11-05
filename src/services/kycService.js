@@ -14,6 +14,13 @@ export const getMyManualDocumentSubmissions = () =>
 export const getPendingManualDocumentSubmissions = () =>
   api("/api/kyc/manual-submissions/pending");
 
+/**
+ * Admin review list with a status filter.
+ * status: "all" | "pending_review" | "verified" | "rejected". Returns { data, counts }.
+ */
+export const getManualDocumentSubmissions = (status = "all") =>
+  api(`/api/kyc/manual-submissions?status=${encodeURIComponent(status)}`);
+
 /** Submit an admin's final decision for one pending bike-document submission. */
 export const reviewManualDocumentSubmission = (id, { decision, reviewNotes = "" }) =>
   api(`/api/kyc/manual-submissions/${id}/review`, {

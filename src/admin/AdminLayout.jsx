@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   ShieldCheck,
+  Star,
   X,
 } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext";
@@ -22,6 +23,7 @@ import "./admin.css";
 export const ADMIN_NAV_ITEMS = [
   { label: "Overview", to: "/admin", icon: LayoutDashboard, end: true, title: "Dashboard overview" },
   { label: "Bike listings", to: "/admin/listings", icon: Bike, title: "Bike listings" },
+  { label: "Featured bikes", to: "/admin/featured-bikes", icon: Star, title: "Featured bikes" },
   { label: "Document reviews", to: "/admin/document-review", icon: FileCheck2, title: "Document reviews" },
   { label: "Rental disputes", to: "/admin/rentals/disputes", icon: ShieldCheck, title: "Rental disputes" },
 ];
