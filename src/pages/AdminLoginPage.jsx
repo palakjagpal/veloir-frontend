@@ -10,7 +10,6 @@ import {
   KeyRound,
   LockKeyhole,
   Mail,
-  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -250,9 +249,7 @@ export default function AdminLoginPage() {
 
             <div className="flex items-center gap-3">
 
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#89c9b8] text-[#092532]">
-                <ShieldCheck size={23} />
-              </span>
+              <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-2xl bg-white p-1"><img src="/veloir-logo.png" alt="" className="h-full w-full object-contain" /></span>
 
               <div>
                 <p className="text-xl font-black tracking-[0.18em]">
@@ -308,9 +305,7 @@ export default function AdminLoginPage() {
 
           <div className="mb-9 flex items-center gap-3 lg:hidden">
 
-            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#092532] text-[#89c9b8]">
-              <ShieldCheck size={23} />
-            </span>
+            <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-2xl bg-white p-1"><img src="/veloir-logo.png" alt="" className="h-full w-full object-contain" /></span>
 
             <div>
               <p className="text-lg font-black tracking-[0.16em]">

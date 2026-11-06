@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Mail, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Mail, UserRound } from "lucide-react";
 
 const RAW_API_BASE =
   import.meta.env.VITE_API_URL ||
@@ -116,7 +116,7 @@ export default function AdminRegisterPage() {
 
       <section className="relative z-10 w-full max-w-xl rounded-[26px] border border-[#dce7df] bg-white px-6 py-9 shadow-[0_28px_90px_rgba(9,37,50,0.13)] sm:px-10">
         <div className="mb-7 flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#092532] text-[#89c9b8]"><ShieldCheck size={24} /></span>
+          <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white p-1"><img src="/veloir-logo.png" alt="" className="h-full w-full object-contain" /></span>
           <div>
             <p className="text-lg font-black tracking-[0.16em]">VELOIR</p>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#678078]">Administrator registration</p>
