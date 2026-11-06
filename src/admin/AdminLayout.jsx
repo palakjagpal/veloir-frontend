@@ -72,7 +72,7 @@ export default function AdminLayout() {
         <aside className={`adm-sidebar ${menuOpen ? "is-open" : ""}`} aria-label="Administrator navigation">
           <div className="adm-sidebar-head">
             <NavLink to="/admin" className="adm-brand" end>
-              <span className="adm-brand-mark"><Bike size={22} strokeWidth={2.2} /></span>
+              <span className="adm-brand-mark"><img src="/veloir-logo.png" alt="" width="40" height="40" /></span>
               <span className="adm-brand-text">
                 <span className="adm-brand-name">veloir</span>
                 <span className="adm-brand-sub">Admin console</span>

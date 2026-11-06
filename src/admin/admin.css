@@ -104,10 +104,12 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .adm-brand { display: flex; align-items: center; gap: 12px; color: #fff; text-decoration: none; }
+/* Logo sits on a white tile: the Veloir mark is dark navy, so it would vanish on the dark sidebar. */
 .adm-brand-mark {
-  display: grid; place-items: center; width: 40px; height: 40px;
-  border-radius: 12px; background: var(--adm-mint); color: var(--adm-ink);
+  display: grid; place-items: center; flex: 0 0 40px; width: 40px; height: 40px; padding: 4px;
+  box-sizing: border-box; border-radius: 12px; background: #ffffff; overflow: hidden;
 }
+.adm-brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .adm-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
 .adm-brand-name { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
 .adm-brand-sub {
