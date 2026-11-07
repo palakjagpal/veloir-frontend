@@ -1599,7 +1599,8 @@ export default function BikeDetailsPage() {
  */
 
 function TermsContent({ text }) {
-  const raw = String(text || "");
+  // Terms may be stored with literal "\r\n" text instead of real line breaks.
+  const raw = String(text || "").replace(/\\r\\n|\\n|\\r/g, "\n");
   let items = raw
     .split(/\r?\n/)
     .map((line) =>
