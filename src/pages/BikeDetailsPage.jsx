@@ -1176,24 +1176,7 @@ export default function BikeDetailsPage() {
 
             <div className="seller-avatar">
 
-              {seller.profileImage ||
-              seller.avatar ? (
-                <img
-                  src={getImageUrl(
-                    seller.profileImage ||
-                      seller.avatar
-                  )}
-                  alt={
-                    seller.name ||
-                    "Seller"
-                  }
-                />
-              ) : (
-                <span>
-                  {seller.name?.[0]?.toUpperCase() ||
-                    "U"}
-                </span>
-              )}
+              <SellerAvatar seller={seller} />
 
             </div>
 
@@ -1609,6 +1592,27 @@ export default function BikeDetailsPage() {
  * SPECIFICATION COMPONENT
  * =========================================================
  */
+
+function SellerAvatar({ seller }) {
+  const [failed, setFailed] = useState(false);
+  const src = seller?.profileImage || seller?.avatar;
+
+  if (!src || failed) {
+    return (
+      <span>
+        {seller?.name?.[0]?.toUpperCase() || "U"}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={getImageUrl(src)}
+      alt={seller?.name || "Seller"}
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 function Spec({
   label,
