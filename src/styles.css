@@ -2848,7 +2848,7 @@ main .sell-banner {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0;
-  background: #fff;
+  background: transparent;
   border: 1px solid #e4ece6;
   border-radius: 8px;
   overflow: hidden;
@@ -2859,7 +2859,7 @@ main .sell-banner {
   flex-direction: column;
   gap: 5px;
   padding: 16px 18px;
-  background: #fff;
+  background: transparent;
   box-shadow: inset -1px -1px 0 #e4ece6;
 }
 
