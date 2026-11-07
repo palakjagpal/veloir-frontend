@@ -140,7 +140,7 @@ export default function LoginPage() {
           <button
             type="button"
             className="google"
-            onClick={() => location.assign(`${API_BASE_URL}/api/auth/google?intent=login`)}
+            onClick={() => window.location.assign(`${API_BASE_URL}/api/auth/google?intent=login`)}
           >
             Continue with Google
           </button>
