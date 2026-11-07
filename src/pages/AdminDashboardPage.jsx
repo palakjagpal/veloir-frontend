@@ -524,7 +524,7 @@ export default function AdminDashboardPage() {
                   transition={{ duration: 0.4, delay: 0.12 }}
                   className="min-w-0 rounded-2xl border border-[#e4ebe5] bg-white p-5 shadow-[0_8px_24px_rgba(9,37,50,0.035)] sm:p-6"
                 >
-                  <SectionHeading eyebrow="Marketplace activity" title="Buyer journey snapshot" />
+                  <SectionHeading eyebrow="Marketplace activity" title="Customer journey snapshot" />
                   <p className="-mt-3 mb-3 text-xs leading-5 text-[#82908c]">
                     Current totals across the inquiry, offer, purchase and rental modules.
                   </p>
@@ -715,10 +715,6 @@ export default function AdminDashboardPage() {
                     )) : (
                       <div className="py-10 text-center text-xs font-semibold text-[#8b9993]">{searchTerm ? "No recent users match your search." : "No user registrations available yet."}</div>
                     )}
-                  </div>
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-[#f5f8f4] p-3 text-[11px] leading-5 text-[#71817f]">
-                    <Users size={15} className="shrink-0 text-[#5d8173]" />
-                    <span>The dashboard API currently returns the five newest user records.</span>
                   </div>
                 </div>
               </section>
