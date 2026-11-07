@@ -9,7 +9,7 @@
 .adm-featured-stats { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
 .adm-featured-stat { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; background: var(--adm-card); border: 1px solid var(--adm-line); border-radius: 16px; }
 .adm-featured-stat-label { font-size: 12px; font-weight: 700; color: var(--adm-muted); }
-.adm-featured-stat strong { font-size: 28px; line-height: 1.1; color: var(--adm-ink); }
+.adm-featured-stat strong { font-size: 28px; line-height: 1.2; color: var(--adm-ink); }
 .adm-featured-meter { height: 8px; margin-top: 4px; border-radius: 999px; background: #e8f0ec; overflow: hidden; }
 .adm-featured-meter span { display: block; height: 100%; border-radius: inherit; background: var(--adm-mint); transition: width .3s ease; }
 .adm-featured-meter.is-full span { background: #d98a1d; }

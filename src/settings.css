@@ -61,7 +61,7 @@
   font-family: Comfortaa, Quicksand, sans-serif;
   font-size: clamp(36px, 5.4vw, 62px);
   font-weight: 700;
-  letter-spacing: -.065em;
+  letter-spacing: 0.01em;
   line-height: 1.15;
 }
 
@@ -147,7 +147,7 @@
   font-family: Comfortaa, Quicksand, sans-serif;
   font-size: clamp(17px, 1.8vw, 21px);
   font-weight: 700;
-  letter-spacing: -.045em;
+  letter-spacing: 0.01em;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }

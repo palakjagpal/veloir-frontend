@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Logo } from "../components/Layout";
 import AddressManagement from "../components/AddressManagement";
 import { API_BASE_URL, getAuthToken } from "../lib/api";
 import "./CreateBikeListingPage.css";
@@ -599,10 +598,7 @@ export default function CreateBikeListingPage() {
   if (submission) {
     return (
       <main className="cbl-page">
-        <div className="cbl-brand-bar">
-          <Logo />
-        </div>
-        <section className="cbl-success" aria-live="polite">
+                <section className="cbl-success" aria-live="polite">
           <div className="cbl-success-mark">✓</div>
           <p className="cbl-kicker">Listing submitted</p>
           <h1>Your bike is in review.</h1>
@@ -643,10 +639,7 @@ export default function CreateBikeListingPage() {
 
   return (
     <main className="cbl-page">
-      <div className="cbl-brand-bar">
-        <Logo />
-      </div>
-      <div className="cbl-heading">
+            <div className="cbl-heading">
         <div>
           <p className="cbl-kicker">Sell, rent or trade</p>
           <h1>Create a bike listing</h1>

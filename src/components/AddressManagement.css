@@ -31,7 +31,7 @@
 .saved-address-marker { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #e8f7ef; color: #387970; }
 .saved-address-body { min-width: 0; }
 .saved-address-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 7px; }
-.saved-address-title-row h3 { margin: 0; color: #092532; font-size: 16px; letter-spacing: -.2px; }
+.saved-address-title-row h3 { margin: 0; color: #092532; font-size: 16px; letter-spacing: 0.01em; }
 .address-default-badge { padding: 3px 8px; color: #286747; background: #e3f6e7; border-radius: 100px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
 .saved-address-body p { margin: 0 0 4px; color: #304e4c; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
 .saved-address-body .saved-address-secondary { color: #607876; }

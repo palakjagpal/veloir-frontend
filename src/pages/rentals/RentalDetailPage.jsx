@@ -20,7 +20,6 @@ import {
   FiCalendar,
   FiCheckCircle,
   FiClock,
-  FiShield,
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 import "../../components/rentals/rental.css";
@@ -284,13 +283,6 @@ export default function RentalDetailPage() {
         {error && (
           <div className="vr-alert" role="alert">
             {error}
-          </div>
-        )}
-        {booking.payment?.mode === "sandbox" && (
-          <div className="vr-callout">
-            <FiShield style={{ verticalAlign: "middle", marginRight: 8 }} />
-            <strong>Sandbox ledger:</strong> payment/refund/deposit states shown
-            here are simulated. No money moves.
           </div>
         )}
         <div className="vr-detail-grid">

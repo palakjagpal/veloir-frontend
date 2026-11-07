@@ -111,7 +111,7 @@ button {
   font-family: Comfortaa;
   font-size: 19px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: 0.01em;
 }
 
 .logo img {
@@ -407,8 +407,8 @@ button {
 .hero h1,
 h1,
 h2 {
-  letter-spacing: -3px;
-  line-height: 0.96;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
   margin: 0;
   font-family: Comfortaa, sans-serif;
   font-weight: 700;
@@ -1486,7 +1486,7 @@ aside input,
 .modal-container h2 {
   font-family: Comfortaa;
   font-size: 28px;
-  letter-spacing: -1.5px;
+  letter-spacing: 0.01em;
   text-align: center;
   margin: 0 0 8px;
 }
@@ -1658,7 +1658,7 @@ aside input,
 
 .settings-card h2 {
   font-size: 22px;
-  letter-spacing: -1px;
+  letter-spacing: 0.01em;
 }
 
 .settings-card-heading p {
@@ -1796,7 +1796,7 @@ aside input,
 
 .community-copy h2 {
   font-size: clamp(30px, 3.8vw, 52px);
-  letter-spacing: -2.5px;
+  letter-spacing: 0.01em;
 }
 
 .community-copy span {
@@ -1871,7 +1871,7 @@ aside input,
 
 .regions-header h2 {
   font-size: clamp(30px, 4vw, 53px);
-  letter-spacing: -2.5px;
+  letter-spacing: 0.01em;
 }
 
 .regions-cta {
@@ -2655,7 +2655,7 @@ main .sell-banner {
 /* Info Panel */
 .bike-details-info h1 {
   font-size: clamp(28px, 3.6vw, 42px);
-  letter-spacing: -1.8px;
+  letter-spacing: 0.01em;
   margin-bottom: 14px;
 }
 
@@ -2718,7 +2718,7 @@ main .sell-banner {
   font-size: 32px;
   font-weight: 700;
   color: var(--ink);
-  letter-spacing: -1px;
+  letter-spacing: 0.01em;
 }
 
 .details-price-secondary {
@@ -2819,7 +2819,7 @@ main .sell-banner {
 .details-section h2 {
   font-size: clamp(22px, 2.6vw, 30px);
   margin-bottom: 24px;
-  letter-spacing: -1px;
+  letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -3229,8 +3229,8 @@ main .sell-banner {
   color: #092532;
   font-size: clamp(24px, 2.4vw, 32px);
   font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.8px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   overflow-wrap: anywhere;
 }
 
@@ -3266,4 +3266,27 @@ main .sell-banner {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ---------- Site-wide typography: open, readable headings ---------- */
+h3,
+h4,
+h5,
+h6 {
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+}
+
+/* ---------- Form text: darker and bold everywhere ---------- */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="color"]),
+select,
+textarea {
+  color: #0a1d24 !important;
+  font-weight: 700 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7d80 !important;
+  font-weight: 500 !important;
 }

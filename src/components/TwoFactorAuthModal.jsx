@@ -1,7 +1,7 @@
 // frontend/src/components/TwoFactorAuthModal.jsx
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiArrowRight, FiCheckCircle, FiX, FiShield } from 'react-icons/fi'
+import { FiArrowRight, FiCheckCircle, FiX } from 'react-icons/fi'
 import { api } from '../lib/api'
 
 export default function TwoFactorAuthModal({ 
@@ -144,10 +144,6 @@ export default function TwoFactorAuthModal({
           <button className="modal-close" onClick={onClose}>
             <FiX />
           </button>
-
-          <div className="modal-icon">
-            <FiShield />
-          </div>
 
           <h2>VERIFY</h2>
           <p className="modal-subtitle">

@@ -1,7 +1,7 @@
 /* ==========================================================================
    Veloir Admin — isolated shell, typography and UI primitives.
    Everything is scoped under .adm-root so nothing here affects the public
-   site, and the public site's global rules (e.g. h1,h2 { letter-spacing:-3px })
+   site, and the public site's global rules (e.g. h1,h2 { letter-spacing: 0.01em })
    are neutralised only inside the admin panel.
    ========================================================================== */
 
@@ -33,14 +33,14 @@
 .adm-root :is(h1, h2, h3, h4, h5, h6) {
   font-family: inherit;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   line-height: 1.25;
   margin-top: 0;
   text-wrap: balance;
 }
 .adm-root .adm-content :is(h1, h2, h3, h4, h5, h6) {
   /* Higher specificity so page-level legacy CSS cannot re-tighten headings. */
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
   line-height: 1.25;
   font-family: inherit;
 }

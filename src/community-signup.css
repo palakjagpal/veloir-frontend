@@ -17,7 +17,7 @@
 }
 .community-copy h2 {
   font-size: clamp(30px, 3.8vw, 52px);
-  letter-spacing: -2.5px;
+  letter-spacing: 0.01em;
 }
 .community-copy span {
   display: block;

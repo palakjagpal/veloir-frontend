@@ -34,9 +34,9 @@
 .admin-dashboard-hero h1 {
   margin: 12px 0 8px;
   font-size: clamp(28px, 4vw, 40px);
-  line-height: 1.1;
+  line-height: 1.2;
   font-weight: 800;
-  letter-spacing: -0.035em;
+  letter-spacing: 0.01em;
 }
 .admin-dashboard-hero p {
   margin: 0;
@@ -156,7 +156,7 @@
   margin-top: 7px;
   font-size: clamp(25px, 3vw, 32px);
   font-weight: 800;
-  letter-spacing: -0.04em;
+  letter-spacing: 0.01em;
   color: #092532;
   line-height: 1.15;
 }
@@ -179,7 +179,7 @@
 .admin-panel-heading h2 {
   margin: 5px 0 0;
   font-size: 22px;
-  letter-spacing: -0.025em;
+  letter-spacing: 0.01em;
   font-weight: 800;
   color: #092532;
 }
