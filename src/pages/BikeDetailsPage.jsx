@@ -836,7 +836,7 @@ export default function BikeDetailsPage() {
           </h2>
 
           <p className="details-description">
-            {bike.description ||
+            {normalizeLineBreaks(bike.description) ||
               "No description provided."}
           </p>
 
@@ -1633,6 +1633,12 @@ function TermsContent({ text }) {
       ))}
     </ul>
   );
+}
+
+// Converts literal "\r\n" text stored in the description into real line breaks.
+function normalizeLineBreaks(value) {
+  if (!value) return value;
+  return String(value).replace(/\\r\\n|\\n|\\r/g, "\n");
 }
 
 function SellerAvatar({ seller }) {
