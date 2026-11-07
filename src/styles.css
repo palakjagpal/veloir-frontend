@@ -2832,6 +2832,46 @@ main .sell-banner {
   white-space: pre-wrap;
 }
 
+.terms-title {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #667b7e;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.terms-text {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.terms-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.terms-list li {
+  position: relative;
+  padding-left: 16px;
+  line-height: 1.6;
+}
+
+.terms-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mint);
+}
+
 .details-notes {
   margin-top: 18px;
   padding: 14px 16px;

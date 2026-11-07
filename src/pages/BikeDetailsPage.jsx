@@ -1088,12 +1088,17 @@ export default function BikeDetailsPage() {
 
               {bike.rentalDetails
                 .terms && (
-                <p className="details-notes">
-                  {
-                    bike.rentalDetails
-                      .terms
-                  }
-                </p>
+                <div className="details-notes">
+                  <span className="terms-title">
+                    Rental terms
+                  </span>
+                  <TermsContent
+                    text={
+                      bike.rentalDetails
+                        .terms
+                    }
+                  />
+                </div>
               )}
 
             </section>
@@ -1592,6 +1597,42 @@ export default function BikeDetailsPage() {
  * SPECIFICATION COMPONENT
  * =========================================================
  */
+
+function TermsContent({ text }) {
+  const raw = String(text || "");
+  let items = raw
+    .split(/\r?\n/)
+    .map((line) =>
+      line
+        .replace(/^\s*(?:[-*\u2022]|\d+[.)])\s+/, "")
+        .trim()
+    )
+    .filter(Boolean);
+
+  // A single long paragraph is split into sentences so it is easier to scan.
+  if (items.length === 1 && items[0].length > 160) {
+    items = items[0]
+      .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  if (items.length === 1) {
+    return <p className="terms-text">{items[0]}</p>;
+  }
+
+  return (
+    <ul className="terms-list">
+      {items.map((item, index) => (
+        <li key={index}>{item}</li>
+      ))}
+    </ul>
+  );
+}
 
 function SellerAvatar({ seller }) {
   const [failed, setFailed] = useState(false);
