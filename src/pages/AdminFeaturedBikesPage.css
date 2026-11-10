@@ -1,4 +1,4 @@
-.adm-featured-page { max-width: 1360px; margin: 0 auto; padding: 8px 0 48px; }
+.adm-featured-page { max-width: 1360px; margin: 0 auto; padding: 32px clamp(16px, 3vw, 36px) 56px; }
 .adm-featured-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 22px; }
 .adm-featured-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; color: #39786d; }
 .adm-featured-header h1 { margin: 0; }
@@ -87,7 +87,7 @@
 }
 
 @media (max-width: 560px) {
-  .adm-featured-page { padding-bottom: 32px; }
+  .adm-featured-page { padding: 20px 16px 36px; }
   .adm-featured-stat { padding: 14px; }
   .adm-featured-stat strong { font-size: 24px; }
   .adm-featured-picker { padding: 14px; }
