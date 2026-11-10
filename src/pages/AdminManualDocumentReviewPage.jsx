@@ -113,7 +113,7 @@ export default function AdminManualDocumentReviewPage() {
         </header>
 
         <div className="manual-review-disclaimer">
-          <FiShield /> <span>Approval records an internal manual review. Do not describe it as government-database verification. Review the details carefully before choosing a decision.</span>
+          <FiShield /> <span>Review the details carefully before choosing a decision.</span>
         </div>
 
         <StatusFilter

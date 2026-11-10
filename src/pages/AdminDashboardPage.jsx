@@ -721,7 +721,7 @@ export default function AdminDashboardPage() {
 
               <footer className="mt-8 flex flex-col justify-between gap-2 border-t border-[#e2eae3] pt-5 text-[11px] font-medium text-[#96a39c] sm:flex-row sm:items-center">
                 <span>© {new Date().getFullYear()} Veloir Admin Console</span>
-                <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#4d9a71]" /> Data loaded from your Veloir backend{dashboard.generatedAt ? ` · Updated ${formatDate(dashboard.generatedAt)}` : ""}</span>
+                <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-[#4d9a71]" /> {dashboard.generatedAt ? ` · Updated ${formatDate(dashboard.generatedAt)}` : ""}</span>
               </footer>
             </>
           ) : error ? null : (
