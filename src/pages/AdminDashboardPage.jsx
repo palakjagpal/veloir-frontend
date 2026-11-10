@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -257,6 +257,8 @@ export default function AdminDashboardPage() {
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const resultsRef = useRef(null);
+  const wasSearchingRef = useRef(false);
   const { admin } = useAdminAuth();
 
   const loadDashboard = useCallback(async (signal, isRefresh = false) => {
@@ -410,6 +412,16 @@ export default function AdminDashboardPage() {
       )
     );
   }, [recentUsers, searchTerm, usingServerSearch, searchResults]);
+
+  // When a search starts, bring the results module (listings + users) into view.
+  useEffect(() => {
+    const isSearching = trimmedQuery.length > 0;
+    if (isSearching && !wasSearchingRef.current && resultsRef.current) {
+      const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      resultsRef.current.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    }
+    wasSearchingRef.current = isSearching;
+  }, [trimmedQuery]);
 
   const isBikeApproved = (bike) => bike.isApproved === true || bike.approvalStatus === "approved";
   const bikeTitle = (bike) => bike.title || `${bike.brand || "Bike"} ${bike.model || ""}`.trim();
@@ -714,7 +726,7 @@ export default function AdminDashboardPage() {
                 </div>
               </section>
 
-              <section className="mt-7 grid grid-cols-1 gap-5 2xl:grid-cols-[1.25fr_0.75fr]">
+              <section ref={resultsRef} style={{ scrollMarginTop: 88 }} className="mt-7 grid grid-cols-1 gap-5 2xl:grid-cols-[1.25fr_0.75fr]">
                 <div className="min-w-0 rounded-2xl border border-[#e4ebe5] bg-white p-5 shadow-[0_8px_24px_rgba(9,37,50,0.035)] sm:p-6">
                   <SectionHeading eyebrow="Latest marketplace entries" title="Recent bike listings" action="View all listings" onAction={() => navigate("/admin/listings")} />
                   {searchLoading ? (

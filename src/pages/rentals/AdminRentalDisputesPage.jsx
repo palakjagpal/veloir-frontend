@@ -55,8 +55,8 @@ export default function AdminRentalDisputesPage() {
     };
     const decisionLabels = {
       no_refund: "no rental-charge refund",
-      refund_full: "a full rental-charge refund (sandbox)",
-      refund_partial: "a partial rental-charge refund (sandbox)",
+      refund_full: "a full rental-charge refund",
+      refund_partial: "a partial rental-charge refund",
     };
     const confirmed = await confirm({
       title: "Record this resolution?",
@@ -91,14 +91,7 @@ export default function AdminRentalDisputesPage() {
         <h1>Rental disputes & refunds</h1>
         <p className="vr-page-subtitle">
           Review participant evidence and record a traceable resolution.
-          Refund/deposit settlement in this build is sandbox-only; never use it
-          as proof of a real transfer.
         </p>
-        <div className="vr-callout">
-          <strong>Sandbox settlement warning:</strong> no money is moved by this
-          interface. In production, connect and verify a payment provider before
-          executing actual refunds or deposit deductions.
-        </div>
         {error && <div className="vr-alert">{error}</div>}
         {loading ? (
           <div className="vr-empty">Loading disputes…</div>
@@ -174,10 +167,10 @@ export default function AdminRentalDisputesPage() {
                           No rental-charge refund
                         </option>
                         <option value="refund_full">
-                          Full rental-charge refund (sandbox)
+                          Full rental-charge refund
                         </option>
                         <option value="refund_partial">
-                          Partial rental-charge refund (sandbox)
+                          Partial rental-charge refund
                         </option>
                       </select>
                     </label>
