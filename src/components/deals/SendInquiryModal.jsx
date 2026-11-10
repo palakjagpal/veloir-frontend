@@ -29,8 +29,6 @@ export default function SendInquiryModal({
   const [form, setForm] =
     useState({
       message: "",
-      proposedPrice:
-        bike?.price || "",
       buyerPhone:
         user?.phone || "",
       buyerEmail:
@@ -99,14 +97,7 @@ export default function SendInquiryModal({
       const response =
         await createInquiry(
           bike._id,
-          {
-            ...form,
-            proposedPrice:
-              Number(
-                form.proposedPrice ||
-                  bike.price
-              ),
-          }
+          { ...form }
         );
 
       toast.success(
@@ -181,24 +172,6 @@ export default function SendInquiryModal({
           </label>
 
           <div className="deal-form-grid">
-            <label>
-              Proposed price
-
-              <input
-                type="number"
-                min="0"
-                value={
-                  form.proposedPrice
-                }
-                onChange={(event) =>
-                  set(
-                    "proposedPrice",
-                    event.target.value
-                  )
-                }
-              />
-            </label>
-
             <label>
               Preferred contact
 
