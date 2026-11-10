@@ -258,7 +258,6 @@ export default function AdminDashboardPage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
   const resultsRef = useRef(null);
-  const wasSearchingRef = useRef(false);
   const { admin } = useAdminAuth();
 
   const loadDashboard = useCallback(async (signal, isRefresh = false) => {
@@ -413,14 +412,19 @@ export default function AdminDashboardPage() {
     );
   }, [recentUsers, searchTerm, usingServerSearch, searchResults]);
 
-  // When a search starts, bring the results module (listings + users) into view.
+  // Bring the results module (listings + users) into view once the admin has finished typing:
+  // after a short pause, or immediately when they press Enter.
+  const scrollToResults = () => {
+    const target = resultsRef.current;
+    if (!target) return;
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  };
+
   useEffect(() => {
-    const isSearching = trimmedQuery.length > 0;
-    if (isSearching && !wasSearchingRef.current && resultsRef.current) {
-      const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-      resultsRef.current.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
-    }
-    wasSearchingRef.current = isSearching;
+    if (!trimmedQuery) return undefined;
+    const timer = setTimeout(scrollToResults, 800);
+    return () => clearTimeout(timer);
   }, [trimmedQuery]);
 
   const isBikeApproved = (bike) => bike.isApproved === true || bike.approvalStatus === "approved";
@@ -536,6 +540,9 @@ export default function AdminDashboardPage() {
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && searchTerm.trim()) scrollToResults();
+                }}
                 placeholder="Search all listings or users"
                 aria-label="Search all listings and users"
                 className="w-full min-w-0 border-0 bg-transparent text-xs font-semibold text-[#092532] outline-none placeholder:font-medium placeholder:text-[#9aa6a1] focus:ring-0"
