@@ -86,16 +86,7 @@ export default function RentalCheckoutPage() {
           renter identity, the payment deadline and slot reservation on
           submission.
         </p>
-        {mode?.mode === "sandbox" ? (
-          <div className="vr-callout">
-            <FiAlertTriangle
-              style={{ verticalAlign: "middle", marginRight: 8 }}
-            />
-            <strong>Sandbox mode — not a real payment.</strong> No card, UPI,
-            bank account or payment gateway is involved. The button only records
-            a demo ledger state on Veloir's server.
-          </div>
-        ) : (
+        {mode?.mode !== "sandbox" && (
           <div className="vr-alert">
             Real payment is not configured. Do not attempt to collect or record
             real money through this screen.

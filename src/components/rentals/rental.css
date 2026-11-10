@@ -85,3 +85,4 @@
 .vr-start-assurance { display:flex; align-items:flex-start; gap:8px; margin-top:15px; padding:10px 11px; border-radius:9px; background:#edf7ed; color:#355f55; font-size:12px; line-height:1.5; }
 .vr-start-assurance svg { flex:none; margin-top:2px; }
 @media(max-width:650px) { .vr-start-bike { grid-template-columns:1fr; gap:15px; padding:13px; } .vr-start-bike-image { height:220px; } }
+@media(max-width:800px){.vr-admin-disputes{grid-template-columns:1fr}}

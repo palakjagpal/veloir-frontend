@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
+  ArrowLeftRight,
   ArrowUpRight,
   Bike,
+  CalendarClock,
   ChevronRight,
+  Tag,
   FileCheck2,
   LayoutDashboard,
   LogOut,
@@ -28,9 +31,9 @@ export const ADMIN_NAV_ITEMS = [
     icon: Bike,
     title: "Bike listings",
     children: [
-      { label: "Rental", to: "/admin/listings/for-rent", title: "Rental bikes" },
-      { label: "Selling", to: "/admin/listings/for-sale", title: "Bikes for sale" },
-      { label: "Trading", to: "/admin/listings/for-trade", title: "Trade listings" },
+      { label: "Rental", to: "/admin/listings/for-rent", title: "Rental bikes", icon: CalendarClock },
+      { label: "Selling", to: "/admin/listings/for-sale", title: "Bikes for sale", icon: Tag },
+      { label: "Trading", to: "/admin/listings/for-trade", title: "Trade listings", icon: ArrowLeftRight },
     ],
   },
   { label: "Featured bikes", to: "/admin/featured-bikes", icon: Star, title: "Featured bikes" },
@@ -150,7 +153,8 @@ export default function AdminLayout() {
                           to={child.to}
                           className={({ isActive }) => `adm-nav-sublink ${isActive ? "is-active" : ""}`}
                         >
-                          {child.label}
+                          {child.icon && <child.icon size={15} strokeWidth={2} aria-hidden="true" />}
+                          <span>{child.label}</span>
                         </NavLink>
                       ))}
                     </div>

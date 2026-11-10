@@ -283,6 +283,7 @@
 .adm-nav-toggle:hover { opacity: 1; background: rgba(255, 255, 255, 0.07); }
 .adm-nav-toggle.is-open { transform: rotate(90deg); }
 .adm-nav-sub { display: grid; gap: 2px; padding: 2px 0 6px 44px; }
-.adm-nav-sublink { display: block; padding: 7px 10px; border-radius: 8px; color: rgba(255, 255, 255, 0.72); font-size: 13px; text-decoration: none; }
+.adm-nav-sublink { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; color: rgba(255, 255, 255, 0.72); font-size: 13px; text-decoration: none; }
 .adm-nav-sublink:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 .adm-nav-sublink.is-active { background: var(--adm-mint); color: var(--adm-ink); }
+.adm-nav-sublink svg { flex: none; opacity: 0.85; }

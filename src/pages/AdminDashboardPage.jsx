@@ -32,6 +32,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { api } from "../lib/api";
 
 const RAW_API_BASE =
   import.meta.env.VITE_API_URL ||
@@ -253,6 +254,9 @@ export default function AdminDashboardPage() {
   const [error, setError] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const { admin } = useAdminAuth();
 
   const loadDashboard = useCallback(async (signal, isRefresh = false) => {
@@ -351,7 +355,42 @@ export default function AdminDashboardPage() {
     [metrics.approvedBikes, metrics.pendingBikes]
   );
 
+  const trimmedQuery = searchTerm.trim();
+  const usingServerSearch = trimmedQuery.length >= 2;
+
+  // Full search across every listing and user (not just the 5 recent items on this page).
+  useEffect(() => {
+    if (!usingServerSearch) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      setSearchError("");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      setSearchError("");
+      try {
+        const response = await api(`/api/admin/search?q=${encodeURIComponent(trimmedQuery)}`, { signal: controller.signal });
+        setSearchResults(response?.data || { bikes: [], users: [] });
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+        setSearchResults(null);
+        setSearchError(err?.message || "Search failed. Please try again.");
+      } finally {
+        if (!controller.signal.aborted) setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [trimmedQuery, usingServerSearch]);
+
   const filteredBikes = useMemo(() => {
+    if (usingServerSearch) return searchResults?.bikes || [];
     const query = searchTerm.trim().toLowerCase();
     if (!query) return recentBikes;
     return recentBikes.filter((bike) =>
@@ -359,9 +398,10 @@ export default function AdminDashboardPage() {
         String(value || "").toLowerCase().includes(query)
       )
     );
-  }, [recentBikes, searchTerm]);
+  }, [recentBikes, searchTerm, usingServerSearch, searchResults]);
 
   const filteredUsers = useMemo(() => {
+    if (usingServerSearch) return searchResults?.users || [];
     const query = searchTerm.trim().toLowerCase();
     if (!query) return recentUsers;
     return recentUsers.filter((user) =>
@@ -369,7 +409,22 @@ export default function AdminDashboardPage() {
         String(value || "").toLowerCase().includes(query)
       )
     );
-  }, [recentUsers, searchTerm]);
+  }, [recentUsers, searchTerm, usingServerSearch, searchResults]);
+
+  const isBikeApproved = (bike) => bike.isApproved === true || bike.approvalStatus === "approved";
+  const bikeTitle = (bike) => bike.title || `${bike.brand || "Bike"} ${bike.model || ""}`.trim();
+  const openBike = (bike) => navigate(bike._id ? `/admin/listings/${bike._id}` : "/admin/listings");
+
+  const emptyBikeText = usingServerSearch
+    ? `No listings match “${trimmedQuery}”.`
+    : searchTerm
+      ? "No recent listings match your search."
+      : "No bike listings available yet.";
+  const emptyUserText = usingServerSearch
+    ? `No users match “${trimmedQuery}”.`
+    : searchTerm
+      ? "No recent users match your search."
+      : "No user registrations available yet.";
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -469,8 +524,8 @@ export default function AdminDashboardPage() {
               <input
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search recent listings or users"
-                aria-label="Search recent listings and users"
+                placeholder="Search all listings or users"
+                aria-label="Search all listings and users"
                 className="w-full min-w-0 border-0 bg-transparent text-xs font-semibold text-[#092532] outline-none placeholder:font-medium placeholder:text-[#9aa6a1] focus:ring-0"
               />
               {searchTerm ? (
@@ -662,37 +717,68 @@ export default function AdminDashboardPage() {
               <section className="mt-7 grid grid-cols-1 gap-5 2xl:grid-cols-[1.25fr_0.75fr]">
                 <div className="min-w-0 rounded-2xl border border-[#e4ebe5] bg-white p-5 shadow-[0_8px_24px_rgba(9,37,50,0.035)] sm:p-6">
                   <SectionHeading eyebrow="Latest marketplace entries" title="Recent bike listings" action="View all listings" onAction={() => navigate("/admin/listings")} />
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[560px] border-collapse text-left">
-                      <thead>
-                        <tr className="border-b border-[#edf1ed] text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#94a19b]">
-                          <th className="pb-3 pr-4">Bike</th>
-                          <th className="pb-3 pr-4">Created</th>
-                          <th className="pb-3 pr-4">Status</th>
-                          <th className="pb-3 text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                  {searchLoading ? (
+                    <p className="py-10 text-center text-xs font-semibold text-[#8b9993]">Searching listings…</p>
+                  ) : searchError ? (
+                    <p className="py-10 text-center text-xs font-semibold text-[#914b3d]">{searchError}</p>
+                  ) : (
+                    <>
+                      <div className="space-y-3 sm:hidden">
                         {filteredBikes.length ? filteredBikes.map((bike) => (
-                          <tr key={bike._id || bike.id || `${bike.title}-${bike.createdAt}`} className="border-b border-[#f0f3ef] last:border-0">
-                            <td className="py-4 pr-4">
-                              <p className="max-w-[260px] truncate text-xs font-extrabold text-[#092532]">{bike.title || `${bike.brand || "Bike"} ${bike.model || ""}`.trim()}</p>
-                              <p className="mt-1 text-[11px] font-medium text-[#8a9992]">{[bike.brand, bike.model].filter(Boolean).join(" · ") || "Marketplace listing"}</p>
-                            </td>
-                            <td className="py-4 pr-4 text-xs font-semibold text-[#71817f]">{formatDate(bike.createdAt)}</td>
-                            <td className="py-4 pr-4"><StatusPill approved={bike.isApproved === true} /></td>
-                            <td className="py-4 text-right">
-                              <button type="button" onClick={() => navigate("/admin/listings")} className="inline-flex items-center gap-1 text-xs font-extrabold text-[#47786d] hover:text-[#092532]">Review <ChevronRight size={13} /></button>
-                            </td>
-                          </tr>
+                          <button
+                            type="button"
+                            key={bike._id || bike.id || `${bike.title}-${bike.createdAt}`}
+                            onClick={() => openBike(bike)}
+                            className="flex w-full items-start justify-between gap-3 rounded-xl border border-[#edf1ed] p-4 text-left transition hover:bg-[#f7faf6]"
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate text-xs font-extrabold text-[#092532]">{bikeTitle(bike)}</span>
+                              <span className="mt-1 block truncate text-[11px] font-medium text-[#8a9992]">{[bike.brand, bike.model].filter(Boolean).join(" · ") || "Marketplace listing"}</span>
+                              <span className="mt-2 block text-[11px] font-semibold text-[#71817f]">{formatDate(bike.createdAt)}</span>
+                            </span>
+                            <span className="flex shrink-0 flex-col items-end gap-2">
+                              <StatusPill approved={isBikeApproved(bike)} />
+                              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-[#47786d]">Review <ChevronRight size={12} /></span>
+                            </span>
+                          </button>
                         )) : (
-                          <tr><td colSpan={4} className="py-10 text-center text-xs font-semibold text-[#8b9993]">{searchTerm ? "No recent listings match your search." : "No bike listings available yet."}</td></tr>
+                          <p className="py-10 text-center text-xs font-semibold text-[#8b9993]">{emptyBikeText}</p>
                         )}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+
+                      <div className="hidden overflow-x-auto sm:block">
+                        <table className="w-full min-w-[560px] border-collapse text-left">
+                          <thead>
+                            <tr className="border-b border-[#edf1ed] text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#94a19b]">
+                              <th className="pb-3 pr-4">Bike</th>
+                              <th className="pb-3 pr-4">Created</th>
+                              <th className="pb-3 pr-4">Status</th>
+                              <th className="pb-3 text-right">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredBikes.length ? filteredBikes.map((bike) => (
+                              <tr key={bike._id || bike.id || `${bike.title}-${bike.createdAt}`} className="border-b border-[#f0f3ef] last:border-0">
+                                <td className="py-4 pr-4">
+                                  <p className="max-w-[260px] truncate text-xs font-extrabold text-[#092532]">{bikeTitle(bike)}</p>
+                                  <p className="mt-1 text-[11px] font-medium text-[#8a9992]">{[bike.brand, bike.model].filter(Boolean).join(" · ") || "Marketplace listing"}</p>
+                                </td>
+                                <td className="py-4 pr-4 text-xs font-semibold text-[#71817f]">{formatDate(bike.createdAt)}</td>
+                                <td className="py-4 pr-4"><StatusPill approved={isBikeApproved(bike)} /></td>
+                                <td className="py-4 text-right">
+                                  <button type="button" onClick={() => openBike(bike)} className="inline-flex items-center gap-1 text-xs font-extrabold text-[#47786d] hover:text-[#092532]">Review <ChevronRight size={13} /></button>
+                                </td>
+                              </tr>
+                            )) : (
+                              <tr><td colSpan={4} className="py-10 text-center text-xs font-semibold text-[#8b9993]">{emptyBikeText}</td></tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
                   <div className="mt-3 flex items-center justify-between border-t border-[#edf1ed] pt-4 text-[11px] font-semibold text-[#93a099]">
-                    <span>Showing up to 5 most recent listings from the dashboard API</span>
+                    <span>{usingServerSearch ? "Search results across all listings" : "Showing up to 5 most recent listings"}</span>
                     <span>{filteredBikes.length} shown</span>
                   </div>
                 </div>
@@ -700,7 +786,9 @@ export default function AdminDashboardPage() {
                 <div className="min-w-0 rounded-2xl border border-[#e4ebe5] bg-white p-5 shadow-[0_8px_24px_rgba(9,37,50,0.035)] sm:p-6">
                   <SectionHeading eyebrow="Community growth" title="Newest users" />
                   <div className="space-y-1">
-                    {filteredUsers.length ? filteredUsers.map((user) => (
+                    {searchLoading && usingServerSearch ? (
+                      <div className="py-10 text-center text-xs font-semibold text-[#8b9993]">Searching users…</div>
+                    ) : filteredUsers.length ? filteredUsers.map((user) => (
                       <div key={user._id || user.id || user.email} className="flex items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-[#f7faf6]">
                         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e9f3e8] text-xs font-extrabold text-[#426f5e]">{initials(user.name || user.email || "User")}</div>
                         <div className="min-w-0 flex-1">
@@ -713,7 +801,7 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
                     )) : (
-                      <div className="py-10 text-center text-xs font-semibold text-[#8b9993]">{searchTerm ? "No recent users match your search." : "No user registrations available yet."}</div>
+                      <div className="py-10 text-center text-xs font-semibold text-[#8b9993]">{emptyUserText}</div>
                     )}
                   </div>
                 </div>
