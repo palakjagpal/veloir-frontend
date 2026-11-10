@@ -275,3 +275,14 @@
 .adm-status-approved { background: #e3f5e8; color: #1f7a3d; }
 .adm-status-pending { background: #fff1d6; color: #9a5b00; }
 .adm-status-rejected { background: #fde4e1; color: #a62d22; }
+
+/* Bike listings sub-menu (Rental / Selling / Trading) */
+.adm-nav-row { display: flex; align-items: center; }
+.adm-nav-row .adm-nav-link { flex: 1; }
+.adm-nav-toggle { background: none; border: 0; color: inherit; padding: 8px; margin-right: 4px; cursor: pointer; opacity: 0.7; border-radius: 8px; transition: transform 0.15s, opacity 0.15s; display: inline-flex; }
+.adm-nav-toggle:hover { opacity: 1; background: rgba(255, 255, 255, 0.07); }
+.adm-nav-toggle.is-open { transform: rotate(90deg); }
+.adm-nav-sub { display: grid; gap: 2px; padding: 2px 0 6px 44px; }
+.adm-nav-sublink { display: block; padding: 7px 10px; border-radius: 8px; color: rgba(255, 255, 255, 0.72); font-size: 13px; text-decoration: none; }
+.adm-nav-sublink:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.adm-nav-sublink.is-active { background: var(--adm-mint); color: var(--adm-ink); }

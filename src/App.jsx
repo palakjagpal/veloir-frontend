@@ -21,6 +21,7 @@ import AdminManualDocumentReviewPage from "./pages/AdminManualDocumentReviewPage
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminListingsPage from "./pages/AdminListingsPage";
 import AdminBikeDetailsPage from "./pages/AdminBikeDetailsPage";
+import AdminListingCategoryPage from "./pages/AdminListingCategoryPage";
 import AdminFeaturedBikesPage from "./pages/AdminFeaturedBikesPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminRegisterPage from "./pages/AdminRegisterPage";
@@ -83,6 +84,9 @@ export default function App() {
         <Route element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/listings" element={<AdminListingsPage />} />
+          <Route path="/admin/listings/for-rent" element={<AdminListingCategoryPage key="rent" type="rent" />} />
+          <Route path="/admin/listings/for-sale" element={<AdminListingCategoryPage key="sale" type="sale" />} />
+          <Route path="/admin/listings/for-trade" element={<AdminListingCategoryPage key="trade" type="trade" />} />
           <Route path="/admin/listings/:id" element={<AdminBikeDetailsPage />} />
           <Route path="/admin/featured-bikes" element={<AdminFeaturedBikesPage />} />
           <Route path="/admin/rentals/disputes" element={<AdminRentalDisputesPage />} />

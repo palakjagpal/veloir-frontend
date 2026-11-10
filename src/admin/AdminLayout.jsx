@@ -22,7 +22,17 @@ import "./admin.css";
  */
 export const ADMIN_NAV_ITEMS = [
   { label: "Overview", to: "/admin", icon: LayoutDashboard, end: true, title: "Dashboard overview" },
-  { label: "Bike listings", to: "/admin/listings", icon: Bike, title: "Bike listings" },
+  {
+    label: "Bike listings",
+    to: "/admin/listings",
+    icon: Bike,
+    title: "Bike listings",
+    children: [
+      { label: "Rental", to: "/admin/listings/for-rent", title: "Rental bikes" },
+      { label: "Selling", to: "/admin/listings/for-sale", title: "Bikes for sale" },
+      { label: "Trading", to: "/admin/listings/for-trade", title: "Trade listings" },
+    ],
+  },
   { label: "Featured bikes", to: "/admin/featured-bikes", icon: Star, title: "Featured bikes" },
   { label: "Document reviews", to: "/admin/document-review", icon: FileCheck2, title: "Document reviews" },
   { label: "Rental disputes", to: "/admin/rentals/disputes", icon: ShieldCheck, title: "Rental disputes" },
@@ -40,10 +50,13 @@ function initials(value = "Admin") {
 }
 
 function currentTitle(pathname) {
-  const match = ADMIN_NAV_ITEMS.find((item) =>
-    item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(`${item.to}/`)
-  );
-  return match?.title || "Administration";
+  // Pick the most specific match so "Rental" wins over its parent "Bike listings".
+  const candidates = ADMIN_NAV_ITEMS.flatMap((item) => [item, ...(item.children || [])])
+    .filter((item) =>
+      item.end ? pathname === item.to : pathname === item.to || pathname.startsWith(`${item.to}/`)
+    )
+    .sort((a, b) => b.to.length - a.to.length);
+  return candidates[0]?.title || "Administration";
 }
 
 export default function AdminLayout() {
@@ -51,6 +64,13 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const onListingsRoute = location.pathname.startsWith("/admin/listings");
+  const [listingsOpen, setListingsOpen] = useState(onListingsRoute);
+
+  // Keep the sub-menu open while the admin is on any listings page.
+  useEffect(() => {
+    if (onListingsRoute) setListingsOpen(true);
+  }, [onListingsRoute]);
 
   // Close the mobile drawer whenever the route changes.
   useEffect(() => {
@@ -87,17 +107,55 @@ export default function AdminLayout() {
           <nav className="adm-nav">
             {ADMIN_NAV_ITEMS.map((item) => {
               const Icon = item.icon;
+              if (!item.children) {
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) => `adm-nav-link ${isActive ? "is-active" : ""}`}
+                  >
+                    <Icon size={18} strokeWidth={2} />
+                    <span>{item.label}</span>
+                    <ChevronRight size={15} className="adm-nav-chevron" />
+                  </NavLink>
+                );
+              }
               return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) => `adm-nav-link ${isActive ? "is-active" : ""}`}
-                >
-                  <Icon size={18} strokeWidth={2} />
-                  <span>{item.label}</span>
-                  <ChevronRight size={15} className="adm-nav-chevron" />
-                </NavLink>
+                <div key={item.to} className="adm-nav-group">
+                  <div className="adm-nav-row">
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) => `adm-nav-link ${isActive ? "is-active" : ""}`}
+                      onClick={() => setListingsOpen(true)}
+                    >
+                      <Icon size={18} strokeWidth={2} />
+                      <span>{item.label}</span>
+                    </NavLink>
+                    <button
+                      type="button"
+                      className={`adm-nav-toggle ${listingsOpen ? "is-open" : ""}`}
+                      aria-expanded={listingsOpen}
+                      aria-label={`${listingsOpen ? "Collapse" : "Expand"} ${item.label} menu`}
+                      onClick={() => setListingsOpen((open) => !open)}
+                    >
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
+                  {listingsOpen && (
+                    <div className="adm-nav-sub">
+                      {item.children.map((child) => (
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          className={({ isActive }) => `adm-nav-sublink ${isActive ? "is-active" : ""}`}
+                        >
+                          {child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
