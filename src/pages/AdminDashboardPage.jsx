@@ -32,7 +32,7 @@ import {
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
-import { api } from "../lib/api";
+import { api, getImageUrl } from "../lib/api";
 
 const RAW_API_BASE =
   import.meta.env.VITE_API_URL ||
@@ -192,6 +192,28 @@ function MetricCard({ label, value, detail, icon: Icon, iconClass, delay = 0 }) 
         </span>
       </div>
     </motion.article>
+  );
+}
+
+function UserAvatar({ user }) {
+  const [failed, setFailed] = useState(false);
+  const src = user.profileImage || user.avatar;
+
+  if (!src || failed) {
+    return (
+      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e9f3e8] text-xs font-extrabold text-[#426f5e]">
+        {initials(user.name || user.email || "User")}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={getImageUrl(src)}
+      alt={user.name || "User"}
+      onError={() => setFailed(true)}
+      className="h-10 w-10 shrink-0 rounded-full border border-[#e4ebe5] object-cover"
+    />
   );
 }
 
@@ -809,7 +831,7 @@ export default function AdminDashboardPage() {
                       <div className="py-10 text-center text-xs font-semibold text-[#8b9993]">Searching users…</div>
                     ) : filteredUsers.length ? filteredUsers.map((user) => (
                       <div key={user._id || user.id || user.email} className="flex items-center gap-3 rounded-xl px-2 py-3 transition hover:bg-[#f7faf6]">
-                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#e9f3e8] text-xs font-extrabold text-[#426f5e]">{initials(user.name || user.email || "User")}</div>
+                        <UserAvatar user={user} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-extrabold text-[#092532]">{user.name || "Veloir member"}</p>
                           <p className="mt-1 truncate text-[11px] font-medium text-[#8a9992]">{user.email || "Email unavailable"}</p>
