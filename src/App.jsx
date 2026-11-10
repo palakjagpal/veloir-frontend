@@ -20,6 +20,7 @@ import KycVerificationSuccessPage from "./pages/KycVerificationSuccessPage";
 import AdminManualDocumentReviewPage from "./pages/AdminManualDocumentReviewPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminListingsPage from "./pages/AdminListingsPage";
+import AdminBikeDetailsPage from "./pages/AdminBikeDetailsPage";
 import AdminFeaturedBikesPage from "./pages/AdminFeaturedBikesPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminRegisterPage from "./pages/AdminRegisterPage";
@@ -82,6 +83,7 @@ export default function App() {
         <Route element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
           <Route path="/admin" element={<AdminDashboardPage />} />
           <Route path="/admin/listings" element={<AdminListingsPage />} />
+          <Route path="/admin/listings/:id" element={<AdminBikeDetailsPage />} />
           <Route path="/admin/featured-bikes" element={<AdminFeaturedBikesPage />} />
           <Route path="/admin/rentals/disputes" element={<AdminRentalDisputesPage />} />
           <Route path="/admin/document-review" element={<AdminManualDocumentReviewPage />} />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { FiArrowLeft, FiTag, FiCheckCircle, FiRefreshCw, FiStar, FiXCircle } from "react-icons/fi";
+import { FiAlertCircle, FiArrowLeft, FiEye, FiTag, FiCheckCircle, FiRefreshCw, FiStar, FiXCircle } from "react-icons/fi";
 import { useAdminUI } from "../admin/AdminUIProvider";
 import { StatusBadge, StatusFilter } from "../admin/StatusFilter";
 import { api, getImageUrl } from "../lib/api";
@@ -168,6 +168,9 @@ export default function AdminListingsPage() {
                   <div className="admin-listing-badges">
                     <StatusBadge status={approval} />
                     {bike.isFeatured && <span className="admin-listing-featured"><FiStar /> Featured</span>}
+                    {(bike.pendingEdits?.fields?.length ?? 0) > 0 && (
+                      <span className="admin-listing-updated"><FiAlertCircle /> Updated by seller</span>
+                    )}
                   </div>
                   <h2>{bike.title}</h2>
                   <p className="admin-listing-subtitle">{[bike.brand, bike.model, bike.year].filter(Boolean).join(" · ")}</p>
@@ -186,6 +189,7 @@ export default function AdminListingsPage() {
                     <div className="admin-listing-warning">The seller's documents were rejected, so this listing cannot be approved until they are resubmitted.</div>
                   )}
                   <div className="admin-listing-actions">
+                    <Link to={`/admin/listings/${bike._id}`} className="admin-listing-view"><FiEye /> View details</Link>
                     {approval !== "rejected" && (
                       <button type="button" className="admin-listing-reject" disabled={Boolean(busyId)} onClick={() => decide(bike, "reject")}>
                         <FiXCircle /> {busy ? "Saving…" : "Reject"}
