@@ -1,6 +1,7 @@
 import { api, formatPrice, getImageUrl } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../hooks/useWishlist";
+import AnimatedHeart from "../components/AnimatedHeart";
 import { useEffect, useState } from "react";
 import {
   Link,
@@ -14,7 +15,6 @@ import {
   FiCalendar,
   FiZap,
   FiActivity,
-  FiHeart,
   FiShare2,
   FiFlag,
   FiMessageCircle,
@@ -761,13 +761,7 @@ export default function BikeDetailsPage() {
                   handleWishlistToggle
                 }
               >
-                <FiHeart
-                  fill={
-                    isWishlisted(id)
-                      ? "currentColor"
-                      : "none"
-                  }
-                />
+                <AnimatedHeart active={isWishlisted(id)} />
               </button>
 
               {/* SHARE */}

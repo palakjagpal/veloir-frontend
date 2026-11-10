@@ -1,0 +1,36 @@
+.animated-heart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+  transition: color 0.3s ease;
+}
+.animated-heart.is-active { color: #e5484d; }
+.animated-heart-icon {
+  display: inline-flex;
+  transform-origin: center;
+}
+.animated-heart-icon svg {
+  display: block;
+  transition: fill-opacity 0.3s ease;
+}
+.animated-heart-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.animated-heart-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: #e5484d;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animated-heart,
+  .animated-heart-icon svg { transition: none; }
+}

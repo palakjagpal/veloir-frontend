@@ -1,5 +1,6 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { FiMapPin, FiHeart } from "react-icons/fi";
+import { FiMapPin } from "react-icons/fi";
+import AnimatedHeart from "./AnimatedHeart";
 import { getImageUrl } from "../lib/api";
 import BikePrice from "./BikePrice";
 import { getBikePricing } from "../lib/bikePricing";
@@ -48,7 +49,7 @@ export function BikeCard({ bike, type }) {
           onClick={handleWishlistClick}
           title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <FiHeart fill={wishlisted ? "currentColor" : "none"} />
+          <AnimatedHeart active={wishlisted} />
         </button>
 
         <div className="transaction-badges">
