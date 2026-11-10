@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { FiHeart } from "react-icons/fi";
+
+// Uses <i> rather than <span>: global rules such as `.bike-image span` (the lime label style) would otherwise
+// absolutely position and restyle the heart inside bike cards.
 import "./AnimatedHeart.css";
 
 // Fixed references so framer-motion does not restart the animation on every render.
@@ -29,11 +32,11 @@ export default function AnimatedHeart({ active = false, size = 16 }) {
   }, [active]);
 
   return (
-    <span
+    <i
       className={`animated-heart ${active ? "is-active" : ""}`}
       style={{ width: size, height: size }}
     >
-      <motion.span
+      <motion.i
         className="animated-heart-icon"
         animate={reduceMotion ? undefined : active ? POP : REST}
         transition={POP_TRANSITION}
@@ -43,12 +46,12 @@ export default function AnimatedHeart({ active = false, size = 16 }) {
           fill="currentColor"
           style={{ fillOpacity: active ? 1 : 0 }}
         />
-      </motion.span>
+      </motion.i>
 
       {!reduceMotion && burst > 0 && (
-        <span key={burst} className="animated-heart-burst" aria-hidden="true">
+        <i key={burst} className="animated-heart-burst" aria-hidden="true">
           {PARTICLES.map((point, index) => (
-            <motion.span
+            <motion.i
               key={index}
               className="animated-heart-dot"
               initial={{ x: 0, y: 0, opacity: 1, scale: 0.6 }}
@@ -56,8 +59,8 @@ export default function AnimatedHeart({ active = false, size = 16 }) {
               transition={{ duration: 0.55, ease: "easeOut" }}
             />
           ))}
-        </span>
+        </i>
       )}
-    </span>
+    </i>
   );
 }
